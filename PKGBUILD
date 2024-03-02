@@ -1,8 +1,8 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgbase=linux-predator
-pkgver=6.7.6.arch1
-pkgrel=2
+pkgver=6.7.7.arch1
+pkgrel=1
 pkgdesc='Linux for acer predator'
 url='https://github.com/archlinux/linux'
 arch=(x86_64)
@@ -34,20 +34,16 @@ validpgpkeys=(
   83BC8889351B5DEBBB68416EB8AC08600F108CDF  # Jan Alexander Steffens (heftig)
 )
 # https://www.kernel.org/pub/linux/kernel/v6.x/sha256sums.asc
-sha256sums=('e489ec0e1370d089b446d565aded7a698093d2b7c4122a18f21edb6ef93d37d3'
+sha256sums=('256b8b44570ddbe266eb3ad0c2cba2616f1609b4a3de5014a3da5512907b14d9'
             'SKIP'
-            'c7a8e85778cb0f1df815531a7f86094f70a8035f5756dcb881f2156d7e328d72'
+            '47208683675e5ad065c9a3821aa975fdb3c37d7d7d77222da4d6f8c3f09827d1'
             'SKIP'
-            '245550c5e0f7ccc850179ade084c0903da6334df3aca6a5010b67165e509ea51'
-            '78e005e2570c246c273fa1cfdf61dade7c8582bef96e7efccc842e0aa452fe4d'
-            '4fe9bd1e232d6db453c617c867f7e834a49138f73f916f054157be420d7c6886')
-b2sums=('51d6e2304e7a9188a0fec5714276589cb46948157c76a2f4ed3f5e0bf634d94a89ea75251229a86e018767a3367328c16b610d631c78d82663dcd1d904b73385'
+            '04143712e593d45a597661fe00f89cf92d52c62df3468c68a46c952c2ef4db64')
+b2sums=('ef97a036ab6cd421200b2e8f0a49c6b570d2269a5e182ea948d48d456e6414bfa61f5f6efa2bad65efbe811d2078a54a4edff9c27de609401160f3905fe27a22'
         'SKIP'
-        '1bc6c87ec30f1dfb6cb8c9a92328b2b4ae192590fa5998b8aff3645496638ce38c681794496319e81e99727a3c68efd35808dfe720e6a3d991c991c42d8a5a27'
+        '45e0ef14e26323bbd2457f77e4c1e9fc0c2d6fb028bb24814d38c2ebfbeaa2aee29cad2f5154df372d098856cf7f3fcd585575e5b95b93cba47ee5de9f92b8e0'
         'SKIP'
-        '96f422647b24218749855b9043caaf9ba6cebe4e0794d30574cd1d9b435528e00852be97a13876d1da8a3388610b73e9cdc2f7c1db91a22435ea360b7dfe9471'
-        '3014e8b7ce17fb77ad8ef9c26be16b31316247ecfd5369b7b1547e4843b71ff2ea6e2827e77a28a19efcd46036b4318047e649e0ec149b96a247774896de1c7e'
-        'c358b5c2c3d5687d93664abf781fa0fe3b1611b751faf56bf01c180fc28adba095e9f2402e2bac4ca3173db2271c705cf38eac467568b797316211f8886f97ba')
+        '21083151bdcd0fc2bcc0475b9cd73bab5666a71f043eedd67b19a3a4c09c8253a5a06794ce9270215782f5885e05e70b5e424123f1bded7aa7a6d3f30d02a4b3')
 
 export KBUILD_BUILD_HOST=archlinux
 export KBUILD_BUILD_USER=$pkgbase
