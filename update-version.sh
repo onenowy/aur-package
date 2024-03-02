@@ -19,4 +19,4 @@ if [ "$CURRENT_VER" != "$NEW_VER" -o  "$CURRENT_REL" != "$NEW_REL" ];then
 	sed -i "s/pkgdesc='Linux'/pkgdesc='Linux for acer predator'/g" PKGBUILD
 fi
 
-echo $UPDATE_STATE
+echo "$UPDATE_STATE"
