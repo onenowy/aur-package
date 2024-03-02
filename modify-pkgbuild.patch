@@ -1,0 +1,54 @@
+From 4fe370116f9df1c1a09f0060784923f6386848ed Mon Sep 17 00:00:00 2001
+From: SungHwan Jung <onenowy@gmail.com>
+Date: Sat, 24 Feb 2024 12:27:47 +0900
+Subject: [PATCH] Update PKGBUILD
+
+---
+ PKGBUILD | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/PKGBUILD b/PKGBUILD
+index 58d7a73..6a8ad92 100644
+--- a/PKGBUILD
++++ b/PKGBUILD
+@@ -17,12 +17,6 @@ makedepends=(
+   python
+   tar
+   xz
+-
+-  # htmldocs
+-  graphviz
+-  imagemagick
+-  python-sphinx
+-  texlive-latexextra
+ )
+ options=('!strip')
+ _srcname=linux-${pkgver%.*}
+@@ -31,6 +25,8 @@ source=(
+   https://cdn.kernel.org/pub/linux/kernel/v${pkgver%%.*}.x/${_srcname}.tar.{xz,sign}
+   $url/releases/download/$_srctag/linux-$_srctag.patch.zst{,.sig}
+   config  # the main kernel config file
++0001-fan-profile.patch
++0002-predator-models.patch
+ )
+ validpgpkeys=(
+   ABAF11C65A2970B130ABE3C479BE3E4300411886  # Linus Torvalds
+@@ -83,7 +79,6 @@ build() {
+   cd $_srcname
+   make all
+   make -C tools/bpf/bpftool vmlinux.h feature-clang-bpf-co-re=1
+-  make htmldocs
+ }
+ 
+ _package() {
+@@ -230,7 +225,6 @@ _package-docs() {
+ pkgname=(
+   "$pkgbase"
+   "$pkgbase-headers"
+-  "$pkgbase-docs"
+ )
+ for _p in "${pkgname[@]}"; do
+   eval "package_$_p() {
+-- 
+2.43.2
+
