@@ -1,0 +1,20 @@
+on: 
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0,12 * * *'
+  
+
+env:
+  UPDATE_STATE: "false"
+
+jobs:
+  update-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run update check
+        run: UPDATE_STATE = $(./update-version.sh | tail -n1) && ./clear.sh
+      - if: ${{ env.UPDATE_STATE != "false" }}
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: new-version ${{ env.UPDATE_STATUS }}
