@@ -1,3 +1,5 @@
+name: main
+
 on: 
   workflow_dispatch:
   schedule:
@@ -5,7 +7,7 @@ on:
   
 
 env:
-  UPDATE_STATE: false
+  UPDATE_STATE: 'false'
 
 jobs:
   update-check:
