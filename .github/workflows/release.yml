@@ -1,0 +1,32 @@
+on: 
+  workflow_dispatch:
+  push:
+    paths:
+      - 'PKGBUILD'
+
+jobs:
+  build-kernel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Maximize build space
+        uses: AdityaGarg8/remove-unwanted-software@v2
+        with:
+          remove-android: 'true'
+          remove-dotnet: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+      - uses: actions/checkout@v4
+      - name: Git clone
+        run: git clone https://gitlab.archlinux.org/archlinux/packaging/packages/linux.git && cp -fv *.patch PKGBUILD linux/
+      - uses: onenowy/archlinux-package-action/action.yml@main
+        with:
+          path: linux
+          updpkgsums: true
+          flags: -cfs --noconfirm --skipchecksums --skippgpcheck
+          repopath: arch
+          reponame: predator-test
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files : arch/*
+      
