@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Git clone
         run: git clone https://gitlab.archlinux.org/archlinux/packaging/packages/linux.git && cp -fv *.patch PKGBUILD linux/
-      - uses: onenowy/archlinux-package-action/action.yml@main
+      - uses: onenowy/archlinux-package-action@main
         with:
           path: linux
           updpkgsums: true
