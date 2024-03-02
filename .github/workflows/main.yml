@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run update check
-        run:  echo "::set-env name=UPDATE_STATE::$(./update-version.sh | tail -n1)" && ./clear.sh
+        run:  echo "UPDATE_STATE=$(./update-version.sh | tail -n1)" >> $GITHUB_ENV && ./clear.sh
       - if: ${{ env.UPDATE_STATE != 'false' }}
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
