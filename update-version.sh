@@ -1,6 +1,6 @@
 #!/bin/sh
-CURRENT_VER=$(awk '/pkgver=/' current-PKGBUILD | cut -d '=' -f 2)
-CURRENT_REL=$(awk '/pkgrel=/' current-PKGBUILD | cut -d '=' -f 2)
+CURRENT_VER=$(awk '/pkgver=/' PKGBUILD | cut -d '=' -f 2)
+CURRENT_REL=$(awk '/pkgrel=/' PKGBUILD | cut -d '=' -f 2)
 
 git clone https://gitlab.archlinux.org/archlinux/packaging/packages/linux.git
 
