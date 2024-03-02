@@ -4,6 +4,7 @@ CURRENT_REL=$(awk '/pkgrel=/' PKGBUILD | cut -d '=' -f 2)
 
 git clone https://gitlab.archlinux.org/archlinux/packaging/packages/linux.git
 
+cp -fv *.patch linux/
 cd linux
 
 NEW_VER=$(awk '/pkgver=/' PKGBUILD | cut -d '=' -f 2)
