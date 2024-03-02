@@ -12,6 +12,8 @@ env:
 jobs:
   update-check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Run update check
@@ -19,4 +21,4 @@ jobs:
       - if: ${{ env.UPDATE_STATE != 'false' }}
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: new-version ${{ env.UPDATE_STATUS }}
+          commit_message: new-version ${{ env.UPDATE_STATE }}
