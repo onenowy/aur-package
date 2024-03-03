@@ -2,9 +2,6 @@ name: release
 
 on: 
   workflow_dispatch:
-  push:
-    paths:
-      - 'PKGBUILD'
 
 jobs:
   build-kernel:
