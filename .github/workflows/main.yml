@@ -24,5 +24,3 @@ jobs:
         with:
           commit_message: new-version ${{ env.UPDATE_STATE }}
           tagging_message: ${{ env.UPDATE_STATE }}
-      - if: steps.commit.outcome == 'success'
-        uses: onenowy/archlinux-acer-predato/.github/workflows/release.yml@${{ env.UPDATE_STATE }}
