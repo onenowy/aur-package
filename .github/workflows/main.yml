@@ -25,4 +25,4 @@ jobs:
           commit_message: new-version ${{ env.UPDATE_STATE }}
           tagging_message: ${{ env.UPDATE_STATE }}
       - if: steps.commit.outcome == 'success'
-        uses: ./.github/workflows/release.yml
+        uses: ./.github/workflows/release.yml@${{ env.UPDATE_STATE }}
