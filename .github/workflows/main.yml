@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      commit_result: ${{ steps.commit.outcome }}
     steps:
       - uses: actions/checkout@v4
       - name: Run update check
@@ -24,5 +26,7 @@ jobs:
         with:
           commit_message: new-version ${{ env.UPDATE_STATE }}
           tagging_message: ${{ env.UPDATE_STATE }}
-      - if: steps.commit.outcome == 'success'
-        uses: onenowy/archlinux-acer-predato/.github/workflows/release.yml@${{ env.UPDATE_STATE }}
+  release:
+    needs: update-check
+    if: needs.update-check.outputs.commit_result == 'success'
+    uses: onenowy/archlinux-acer-predato/.github/workflows/release.yml@${{ env.UPDATE_STATE }}
