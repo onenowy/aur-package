@@ -18,6 +18,8 @@ jobs:
       commit_result: ${{ steps.commit.outcome }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT }}
       - name: Run update check
         run:  echo "UPDATE_STATE=$(./update-version.sh | tail -n1)" >> $GITHUB_ENV && ./clear.sh
       - if: ${{ env.UPDATE_STATE != 'false' }}
@@ -26,7 +28,3 @@ jobs:
         with:
           commit_message: new-version ${{ env.UPDATE_STATE }}
           tagging_message: ${{ env.UPDATE_STATE }}
-  release:
-    needs: update-check
-    if: needs.update-check.outputs.commit_result == 'success'
-    uses: onenowy/archlinux-acer-predato/.github/workflows/release.yml@${{ env.UPDATE_STATE }}
