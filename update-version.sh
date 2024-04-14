@@ -1,22 +1,49 @@
-#!/bin/sh
-CURRENT_VER=$(awk '/pkgver=/' PKGBUILD | cut -d '=' -f 2)
-CURRENT_REL=$(awk '/pkgrel=/' PKGBUILD | cut -d '=' -f 2)
+#!/bin/bash
 
-git clone https://gitlab.archlinux.org/archlinux/packaging/packages/linux.git
+# This script updates the package version if a new version is available
+set -euxo pipefail
 
-cp -fv *.patch linux/
-cd linux
-
-NEW_VER=$(awk '/pkgver=/' PKGBUILD | cut -d '=' -f 2)
-NEW_REL=$(awk '/pkgrel=/' PKGBUILD | cut -d '=' -f 2)
 
 UPDATE_STATE="false"
 
-if [ "$CURRENT_VER" != "$NEW_VER" -o  "$CURRENT_REL" != "$NEW_REL" ];then
-	UPDATE_STATE="${NEW_VER}-${NEW_REL}"
-	patch -p1 < modify-pkgbuild.patch
-	sed -i "s/pkgbase=linux/pkgbase=linux-predator/g" PKGBUILD
-	sed -i "s/pkgdesc='Linux'/pkgdesc='Linux for acer predator'/g" PKGBUILD
+# Get channel
+PKG="microsoft-edge-stable"
+
+# Get latest version
+VER=$(curl -sSf https://packages.microsoft.com/repos/edge/dists/stable/main/binary-amd64/Packages |
+    grep -A6 "Package: ${PKG}" |
+    awk '/Version/{print $2}' |
+    sort -rV |
+    head -n1)
+
+# Insert latest version into PKGBUILD and update hashes
+sed -i \
+    -e "s/^pkgver=.*/pkgver=${VER}/" \
+    PKGBUILD
+
+# Check whether this changed anything
+if (git diff --exit-code PKGBUILD); then
+    echo "$UPDATE_STATE"
+    exit 0
 fi
+
+UPDATE_STATE="${VER}"
+
+# updpkgsums
+SUM256=$(curl -sSf https://packages.microsoft.com/repos/edge/dists/stable/main/binary-amd64/Packages |
+    grep -A15 "Package: ${PKG}" |
+    grep -A14 "Version: ${VER}" |
+    awk '/SHA256/{print $2}' |
+    head -n1)
+
+# Insert latest shasum into PKGBUILD and update hashes
+sed -i \
+    -e "s/^sha256sums=('.*/sha256sums=('${SUM256}'/" \
+    PKGBUILD
+
+# Reset pkgrel
+sed -i \
+    -e 's/pkgrel=.*/pkgrel=1/' \
+    PKGBUILD
 
 echo "$UPDATE_STATE"

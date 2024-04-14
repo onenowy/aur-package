@@ -19,15 +19,11 @@ jobs:
           remove-haskell: 'true'
           remove-codeql: 'true'
       - uses: actions/checkout@v4
-      - name: Git clone
-        run: git clone https://gitlab.archlinux.org/archlinux/packaging/packages/linux.git && cp -fv *.patch PKGBUILD linux/
       - uses: onenowy/archlinux-package-action@main
         with:
-          path: linux
-          updpkgsums: true
-          flags: -cfs --noconfirm --skipchecksums --skippgpcheck
+          flags: -cfs --noconfirm --skippgpcheck
           repopath: arch
-          reponame: predator-test
+          reponame: shelter-arch-aur
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
