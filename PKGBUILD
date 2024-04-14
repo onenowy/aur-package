@@ -21,7 +21,6 @@ optdepends=(
 	'kwallet: for storing passwords in KWallet'
 	)
 options=(!strip !zipman)
-_channel=stable
 source=("https://packages.microsoft.com/repos/edge/pool/main/m/microsoft-edge-stable/${_pkgname}-stable_${pkgver}_amd64.deb"
         "microsoft-edge-stable.sh")
 sha256sums=('abb3dc6e2d0942bff0bca22b82e783f5fd99eafd433280f66dc449286a83623b'
