@@ -33,5 +33,5 @@ jobs:
         env:
           F_TIME: "${{ steps.current-time.outputs.formattedTime }}"
         with:
-          commit_message: new-version ${{ env.F_TIME }}
+          commit_message: new version ${{ env.F_TIME }}
           tagging_message: ${{ env.F_TIME }}
