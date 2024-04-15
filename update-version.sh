@@ -13,6 +13,7 @@ PKG="microsoft-edge-stable"
 VER=$(curl -sSf https://packages.microsoft.com/repos/edge/dists/stable/main/binary-amd64/Packages |
     grep -A6 "Package: ${PKG}" |
     awk '/Version/{print $2}' |
+    cut -d '-' -f1 |
     sort -rV |
     head -n1)
 
