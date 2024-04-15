@@ -22,9 +22,16 @@ jobs:
           token: ${{ secrets.PAT }}
       - name: Run update check
         run:  echo "UPDATE_STATE=$(./update-version.sh | tail -n1)" >> $GITHUB_ENV
+      - name: Get current time
+        uses: josStorer/get-current-time@v2
+        id: current-time
+        with:
+            format: YYYYMMDDHHmmss
       - if: ${{ env.UPDATE_STATE != 'false' }}
         uses: stefanzweifel/git-auto-commit-action@v5
         id: commit
+        env:
+            F_TIME: "${{ steps.current-time.outputs.formattedTime }}"
         with:
-          commit_message: new-version ${{ env.UPDATE_STATE }}
-          tagging_message: ${{ env.UPDATE_STATE }}
+          commit_message: new-version ${{ $F_TIME }}
+          tagging_message: ${{ $F_TIME }}
