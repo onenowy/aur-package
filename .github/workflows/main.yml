@@ -26,12 +26,12 @@ jobs:
         uses: josStorer/get-current-time@v2
         id: current-time
         with:
-            format: YYYYMMDDHHmmss
+          format: YYYYMMDDHHmmss
       - if: ${{ env.UPDATE_STATE != 'false' }}
         uses: stefanzweifel/git-auto-commit-action@v5
         id: commit
         env:
-            F_TIME: "${{ steps.current-time.outputs.formattedTime }}"
+          F_TIME: "${{ steps.current-time.outputs.formattedTime }}"
         with:
           commit_message: new-version ${{ $F_TIME }}
           tagging_message: ${{ $F_TIME }}
