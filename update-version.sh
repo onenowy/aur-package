@@ -10,12 +10,12 @@ UPDATE_STATE="false"
 PKG="microsoft-edge-stable"
 
 # Get latest version
-VER=$(curl -sSf https://packages.microsoft.com/repos/edge/dists/stable/main/binary-amd64/Packages |
-    grep -A6 "Package: ${PKG}" |
-    awk '/Version/{print $2}' |
-    cut -d '-' -f1 |
-    sort -rV |
-    head -n1)
+FILELISTS=$(curl -sSf "https://packages.microsoft.com/yumrepos/edge/repodata/repomd.xml" |
+    xmllint --xpath 'string(//*[local-name()="data"][@type="filelists"]/*[local-name()="location"]/@href)' -)
+
+VER=$(curl -sSf "https://packages.microsoft.com/yumrepos/edge/${FILELISTS}" |
+    gzip -dc |
+    xmllint --xpath 'string(//*[local-name()="package"][@name="microsoft-edge-stable"][last()]/*[local-name()="version"]/@ver)' -)
 
 # Insert latest version into PKGBUILD and update hashes
 sed -i \
@@ -31,11 +31,9 @@ fi
 UPDATE_STATE="${VER}"
 
 # updpkgsums
-SUM256=$(curl -sSf https://packages.microsoft.com/repos/edge/dists/stable/main/binary-amd64/Packages |
-    grep -A15 "Package: ${PKG}" |
-    grep -A14 "Version: ${VER}" |
-    awk '/SHA256/{print $2}' |
-    head -n1)
+SUM256=$(curl -sSf "https://packages.microsoft.com/yumrepos/edge/${FILELISTS}" |
+    gzip -dc |
+    xmllint --xpath 'string(//*[local-name()="package"][@name="microsoft-edge-stable"][last()]/@pkgid)' -)
 
 # Insert latest shasum into PKGBUILD and update hashes
 sed -i \

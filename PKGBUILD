@@ -21,14 +21,14 @@ optdepends=(
 	'kwallet: for storing passwords in KWallet'
 	)
 options=(!strip !zipman)
-source=("https://packages.microsoft.com/repos/edge/pool/main/m/microsoft-edge-stable/${_pkgname}-stable_${pkgver}-1_amd64.deb"
+source=("https://packages.microsoft.com/yumrepos/edge/Packages/m/${_pkgname}-stable-${pkgver}-1.x86_64.rpm"
         "microsoft-edge-stable.sh")
-sha256sums=('abb3dc6e2d0942bff0bca22b82e783f5fd99eafd433280f66dc449286a83623b'
+sha256sums=('5b0d8b60f04a0e71988489e001025113677e645c378fa150ab260af0b4c19b30'
             'dc3765d2de6520b13f105b8001aa0e40291bc9457ac508160b23eea8811e26af')
 
 package() {
-	bsdtar -xf data.tar.xz -C "$pkgdir/"
 
+	cp --parents -a {opt,usr} "$pkgdir"
 	# suid sandbox
 	chmod 4755 "${pkgdir}/opt/microsoft/${_pkgshortname}/msedge-sandbox"
 	# install icons
@@ -39,9 +39,5 @@ package() {
        # User flag aware launcher
        install -m755 microsoft-edge-stable.sh "${pkgdir}/usr/bin/microsoft-edge-stable"
 
-	# License
-	rm -r "${pkgdir}/etc/cron.daily/" "${pkgdir}/opt/microsoft/${_pkgshortname}/cron/"
-	# Globbing seems not to work inside double parenthesis
-	rm "${pkgdir}/opt/microsoft/${_pkgshortname}"/product_logo_*.png
-	rm -r "$pkgdir"/usr/share/menu/
+       rm "${pkgdir}/opt/microsoft/${_pkgshortname}"/product_logo_*.png
 }
