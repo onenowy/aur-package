@@ -18,15 +18,16 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT }}
+      - name: Install libxml2-utils
+        run: sudo apt install -y libxml2-utils
       - name: Run update check
-        run:  echo "UPDATE_STATE=$(./update-version.sh | tail -n1)" >> $GITHUB_ENV
+        run:  ./update-version.sh
       - name: Get current time
         uses: josStorer/get-current-time@v2
         id: current-time
         with:
           format: YYYYMMDDHHmmss
-      - if: ${{ env.UPDATE_STATE != 'false' }}
-        uses: stefanzweifel/git-auto-commit-action@v5
+      - uses: stefanzweifel/git-auto-commit-action@v5
         id: commit
         env:
           F_TIME: "${{ steps.current-time.outputs.formattedTime }}"

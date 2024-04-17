@@ -3,9 +3,6 @@
 # This script updates the package version if a new version is available
 set -euxo pipefail
 
-
-UPDATE_STATE="false"
-
 # Get channel
 PKG="microsoft-edge-stable"
 
@@ -24,11 +21,8 @@ sed -i \
 
 # Check whether this changed anything
 if (git diff --exit-code PKGBUILD); then
-    echo "$UPDATE_STATE"
     exit 0
 fi
-
-UPDATE_STATE="${VER}"
 
 # updpkgsums
 SUM256=$(curl -sSf "https://packages.microsoft.com/yumrepos/edge/${FILELISTS}" |
