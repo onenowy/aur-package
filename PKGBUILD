@@ -5,7 +5,7 @@
 pkgname=microsoft-edge-stable-bin
 _pkgname=microsoft-edge
 _pkgshortname=msedge
-pkgver=123.0.2420.97
+pkgver=124.0.2478.51
 pkgrel=1
 pkgdesc="A browser that combines a minimal design with sophisticated technology to make the web faster, safer, and easier"
 arch=('x86_64')
@@ -23,7 +23,7 @@ optdepends=(
 options=(!strip !zipman)
 source=("https://packages.microsoft.com/yumrepos/edge/Packages/m/${_pkgname}-stable-${pkgver}-1.x86_64.rpm"
         "microsoft-edge-stable.sh")
-sha256sums=('5b0d8b60f04a0e71988489e001025113677e645c378fa150ab260af0b4c19b30'
+sha256sums=('8a235a2dfd426858529df4a050c9f0b39b8f49e20ba243970909d615858a92ac'
             'dc3765d2de6520b13f105b8001aa0e40291bc9457ac508160b23eea8811e26af')
 
 package() {
