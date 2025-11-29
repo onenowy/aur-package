@@ -2,7 +2,7 @@
 # Contributor: EsauPR
 # Contributor: bittin
 
-pkgname=microsoft-edge-stable-bin
+pkgname=microsoft-edge-stable
 _pkgname=microsoft-edge
 _pkgshortname=msedge
 pkgver=124.0.2478.51
@@ -11,15 +11,15 @@ pkgdesc="A browser that combines a minimal design with sophisticated technology 
 arch=('x86_64')
 url="https://www.microsoftedgeinsider.com/en-us/download"
 license=('custom')
-provides=('microsoft-edge-stable' 'edge-stable')
-conflicts=('microsoft-edge-stable' 'edge-stable' 'edge-stable-bin' 'edge')
-depends=('gtk3' 'libcups' 'nss' 'alsa-lib' 'libxtst' 'libdrm' 'mesa')
-optdepends=(
-	'pipewire: WebRTC desktop sharing under Wayland'
-	'kdialog: for file dialogs in KDE'
-	'gnome-keyring: for storing passwords in GNOME keyring'
-	'kwallet: for storing passwords in KWallet'
-	)
+depends=('gtk3' 'nss' 'alsa-lib' 'xdg-utils' 'libxss' 'libcups' 'libgcrypt'
+         'ttf-liberation' 'systemd' 'dbus' 'libpulse' 'pciutils' 'libva'
+         'libffi' 'desktop-file-utils' 'hicolor-icon-theme')
+optdepends=('pipewire: WebRTC desktop sharing under Wayland'
+            'kdialog: support for native dialogs in Plasma'
+            'gtk4: for --gtk-version=4 (GTK4 IME might work better on Wayland)'
+            'org.freedesktop.secrets: password storage backend on GNOME / Xfce'
+            'kwallet: support for storing passwords in KWallet on Plasma'
+            'upower: Battery Status API support')
 options=(!strip !zipman)
 source=("https://packages.microsoft.com/yumrepos/edge/Packages/m/${_pkgname}-stable-${pkgver}-1.x86_64.rpm"
         "microsoft-edge-stable.sh")
