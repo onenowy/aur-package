@@ -47,27 +47,30 @@ jobs:
           commit_message: "update: ${{ steps.check.outputs.NEW_VERSION }}"
           file_pattern: 'PKGBUILD .SRCINFO'
 
-      - name: Update Repository Database
+      - name: Create Repository Database
         if: steps.check.outputs.UPDATE_NEEDED == 'true'
         run: |
-          mkdir -p repo_dist/x86_64
-          git fetch origin gh-pages:gh-pages || true
-          git --work-tree=./repo_dist checkout gh-pages -- x86_64 || echo "Creating new repo structure"
-
-          rm -f repo_dist/x86_64/microsoft-edge-stable-*.pkg.tar.zst
-
-          mv *.pkg.tar.zst repo_dist/x86_64/
-          
-          docker run --rm -v $PWD/repo_dist/x86_64:/repo archlinux:base-devel /bin/bash -c "
+          mkdir -p release_dist
+          mv *.pkg.tar.zst release_dist/
+          docker run --rm -v $PWD/release_dist:/repo archlinux:base-devel /bin/bash -c "
             cd /repo && 
-            repo-add -n -R shelter-arch-aur.db.tar.gz *.pkg.tar.zst
+            repo-add -n shelter-arch-aur.db.tar.gz *.pkg.tar.zst
           "
 
-      - name: Deploy to GitHub Pages
+      - name: Delete Old Release
         if: steps.check.outputs.UPDATE_NEEDED == 'true'
-        uses: peaceiris/actions-gh-pages@v3
+        uses: dev-drprasad/delete-tag-and-release@v1.1
         with:
+          tag_name: x86_64
+          delete_release: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./repo_dist
-          publish_branch: gh-pages
-          keep_files: true
+
+      - name: Upload to GitHub Release
+        if: steps.check.outputs.UPDATE_NEEDED == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: x86_64
+          name: "Arch Linux Repository (x86_64)"
+          body: "Updated: ${{ steps.check.outputs.NEW_VERSION }}"
+          files: release_dist/*
+          token: ${{ secrets.GITHUB_TOKEN }}
