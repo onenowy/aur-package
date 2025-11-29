@@ -7,10 +7,10 @@ set -euxo pipefail
 PKG="microsoft-edge-stable"
 
 # Get latest version
-FILELISTS=$(curl -sSf "https://packages.microsoft.com/yumrepos/edge/repodata/repomd.xml" |
-    xmllint --xpath 'string(//*[local-name()="data"][@type="filelists"]/*[local-name()="location"]/@href)' -)
+OTHER=$(curl -sSf "https://packages.microsoft.com/yumrepos/edge/repodata/repomd.xml" |
+    xmllint --xpath 'string(//*[local-name()="data"][@type="other"]/*[local-name()="location"]/@href)' -)
 
-VER=$(curl -sSf "https://packages.microsoft.com/yumrepos/edge/${FILELISTS}" |
+VER=$(curl -sSf "https://packages.microsoft.com/yumrepos/edge/${OTHER}" |
     gzip -dc |
     xmllint --xpath 'string(//*[local-name()="package"][@name="microsoft-edge-stable"][last()]/*[local-name()="version"]/@ver)' -)
 
@@ -25,7 +25,7 @@ if (git diff --exit-code PKGBUILD); then
 fi
 
 # updpkgsums
-SUM256=$(curl -sSf "https://packages.microsoft.com/yumrepos/edge/${FILELISTS}" |
+SUM256=$(curl -sSf "https://packages.microsoft.com/yumrepos/edge/${OTHER}" |
     gzip -dc |
     xmllint --xpath 'string(//*[local-name()="package"][@name="microsoft-edge-stable"][last()]/@pkgid)' -)
 
