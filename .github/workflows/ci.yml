@@ -66,4 +66,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./repo_dist
           publish_branch: gh-pages
-          keep_files: true # DB 연속성을 위해 필수
+          keep_files: true 
