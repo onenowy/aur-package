@@ -22,14 +22,7 @@ jobs:
         id: check
         run: ./update-version.sh
 
-      - name: Commit PKGBUILD Changes
-        if: steps.check.outputs.UPDATE_NEEDED == 'true'
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "update: ${{ steps.check.outputs.NEW_VERSION }}"
-          file_pattern: 'PKGBUILD .SRCINFO'
-
-      - name: Build Package
+      - name: Build Package and Generate SRCINFO
         if: steps.check.outputs.UPDATE_NEEDED == 'true'
         uses: docker://archlinux:base-devel
         with:
@@ -39,23 +32,34 @@ jobs:
             passwd -d builduser &&
             printf 'builduser ALL=(ALL) ALL\n' | tee -a /etc/sudoers &&
             chown -R builduser:builduser . &&
+            su builduser -c 'makepkg --printsrcinfo > .SRCINFO' &&
             su builduser -c 'makepkg -s --noconfirm'
             "
+
+      - name: Fix File Permissions
+        if: steps.check.outputs.UPDATE_NEEDED == 'true'
+        run: sudo chown -R $USER:$USER .
+
+      - name: Commit PKGBUILD Changes
+        if: steps.check.outputs.UPDATE_NEEDED == 'true'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "update: ${{ steps.check.outputs.NEW_VERSION }}"
+          file_pattern: 'PKGBUILD .SRCINFO'
 
       - name: Update Repository Database
         if: steps.check.outputs.UPDATE_NEEDED == 'true'
         run: |
           mkdir -p repo_dist/x86_64
-
           git fetch origin gh-pages:gh-pages || true
           git --work-tree=./repo_dist checkout gh-pages -- x86_64 || echo "Creating new repo structure"
 
           rm -f repo_dist/x86_64/microsoft-edge-stable-*.pkg.tar.zst
 
           mv *.pkg.tar.zst repo_dist/x86_64/
-
+          
           docker run --rm -v $PWD/repo_dist/x86_64:/repo archlinux:base-devel /bin/bash -c "
-            cd /repo &&
+            cd /repo && 
             repo-add -n -R shelter-arch-aur.db.tar.gz *.pkg.tar.zst
           "
 
@@ -66,4 +70,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./repo_dist
           publish_branch: gh-pages
-          keep_files: true 
+          keep_files: true
