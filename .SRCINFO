@@ -1,7 +1,7 @@
 pkgbase = microsoft-edge-stable
 	pkgdesc = A browser that combines a minimal design with sophisticated technology to make the web faster, safer, and easier
 	pkgver = 142.0.3595.94
-	pkgrel = 1
+	pkgrel = 2
 	url = https://www.microsoftedgeinsider.com/en-us/download
 	arch = x86_64
 	license = custom
@@ -21,6 +21,7 @@ pkgbase = microsoft-edge-stable
 	depends = libffi
 	depends = desktop-file-utils
 	depends = hicolor-icon-theme
+	depends = libxml2-legacy
 	optdepends = pipewire: WebRTC desktop sharing under Wayland
 	optdepends = kdialog: support for native dialogs in Plasma
 	optdepends = gtk4: for --gtk-version=4 (GTK4 IME might work better on Wayland)
