@@ -6,14 +6,14 @@ pkgname=microsoft-edge-stable
 _pkgname=microsoft-edge
 _pkgshortname=msedge
 pkgver=142.0.3595.94
-pkgrel=1
+pkgrel=2
 pkgdesc="A browser that combines a minimal design with sophisticated technology to make the web faster, safer, and easier"
 arch=('x86_64')
 url="https://www.microsoftedgeinsider.com/en-us/download"
 license=('custom')
 depends=('gtk3' 'nss' 'alsa-lib' 'xdg-utils' 'libxss' 'libcups' 'libgcrypt'
          'ttf-liberation' 'systemd' 'dbus' 'libpulse' 'pciutils' 'libva'
-         'libffi' 'desktop-file-utils' 'hicolor-icon-theme')
+         'libffi' 'desktop-file-utils' 'hicolor-icon-theme' 'libxml2-legacy')
 optdepends=('pipewire: WebRTC desktop sharing under Wayland'
             'kdialog: support for native dialogs in Plasma'
             'gtk4: for --gtk-version=4 (GTK4 IME might work better on Wayland)'
