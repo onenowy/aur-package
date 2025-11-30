@@ -1,9 +1,15 @@
 name: Arch Package CI/CD
 
 on:
-  workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'
+  workflow_dispatch:
+    inputs:
+      check_for_updates:
+        description: 'Check upstream updates? (Uncheck to build current PKGBUILD as-is)'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -12,18 +18,23 @@ jobs:
   check-and-build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install Dependencies
-        run: sudo apt-get install -y libxml2-utils
+      - run: sudo apt-get install -y libxml2-utils
 
-      - name: Check for Updates
-        id: check
-        run: ./update-version.sh
+      - id: check
+        run: |
+          chmod +x ./update-version.sh
+          if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.check_for_updates }}" == "true" ]]; then
+            ./update-version.sh
+          else
+            VER=$(grep "^pkgver=" PKGBUILD | cut -d'=' -f2)
+            REL=$(grep "^pkgrel=" PKGBUILD | cut -d'=' -f2)
+            echo "UPDATE_NEEDED=true" >> "$GITHUB_OUTPUT"
+            echo "NEW_VERSION=${VER}-${REL}" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Build Package and Generate SRCINFO
-        if: steps.check.outputs.UPDATE_NEEDED == 'true'
+      - if: steps.check.outputs.UPDATE_NEEDED == 'true'
         uses: docker://archlinux:base-devel
         with:
           args: /bin/bash -c "
@@ -36,19 +47,16 @@ jobs:
             su builduser -c 'makepkg -s --noconfirm'
             "
 
-      - name: Fix File Permissions
-        if: steps.check.outputs.UPDATE_NEEDED == 'true'
+      - if: steps.check.outputs.UPDATE_NEEDED == 'true'
         run: sudo chown -R $USER:$USER .
 
-      - name: Commit PKGBUILD Changes
-        if: steps.check.outputs.UPDATE_NEEDED == 'true'
+      - if: steps.check.outputs.UPDATE_NEEDED == 'true'
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "update: ${{ steps.check.outputs.NEW_VERSION }}"
           file_pattern: 'PKGBUILD .SRCINFO'
 
-      - name: Create Repository Database
-        if: steps.check.outputs.UPDATE_NEEDED == 'true'
+      - if: steps.check.outputs.UPDATE_NEEDED == 'true'
         run: |
           mkdir -p release_dist
           mv *.pkg.tar.zst release_dist/
@@ -57,20 +65,18 @@ jobs:
             repo-add -n shelter-arch-aur.db.tar.gz *.pkg.tar.zst
           "
 
-      - name: Delete Old Release
-        if: steps.check.outputs.UPDATE_NEEDED == 'true'
+      - if: steps.check.outputs.UPDATE_NEEDED == 'true'
         uses: dev-drprasad/delete-tag-and-release@v1.1
         with:
           tag_name: x86_64
           delete_release: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload to GitHub Release
-        if: steps.check.outputs.UPDATE_NEEDED == 'true'
+      - if: steps.check.outputs.UPDATE_NEEDED == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: x86_64
           name: "Arch Linux Repository (x86_64)"
-          body: "Updated: ${{ steps.check.outputs.NEW_VERSION }}"
+          body: "Package Updated: ${{ steps.check.outputs.NEW_VERSION }}"
           files: release_dist/*
           token: ${{ secrets.GITHUB_TOKEN }}
