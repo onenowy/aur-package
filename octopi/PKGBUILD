@@ -25,7 +25,6 @@ prepare() {
 build() {
    cd "${_pkgname}"
    echo "Starting build..."
-   sed 's&usr/local&usr&g' -i "src/constants.h"
    qmake6 PREFIX=/usr QMAKE_CFLAGS="${CFLAGS}" QMAKE_CXXFLAGS="${CXXFLAGS}" QMAKE_LFLAGS="${LDFLAGS}" octopi.pro
    make
 
