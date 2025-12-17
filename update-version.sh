@@ -40,8 +40,9 @@ if [ ${#BUILD_LIST[@]} -eq 0 ]; then
     echo "No updates found."
     echo "BUILD_REQUIRED=false" >> "$GITHUB_OUTPUT"
 else
-    # Convert to JSON array
-    JSON_LIST=$(printf '%s\n' "${BUILD_LIST[@]}" | jq -R . | jq -s .)
+    # Convert to JSON array (Compact mode: -c to ensure single line)
+    # Changed: Added -c to the final jq command
+    JSON_LIST=$(printf '%s\n' "${BUILD_LIST[@]}" | jq -R . | jq -s -c .)
     echo "Build List: $JSON_LIST"
     
     echo "BUILD_REQUIRED=true" >> "$GITHUB_OUTPUT"
