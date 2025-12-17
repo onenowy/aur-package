@@ -1,0 +1,15 @@
+pkgbase = alpm_octopi_utils
+	pkgdesc = Alpm utils for Octopi
+	pkgver = 1.0.2
+	pkgrel = 1
+	url = https://octopiproject.wordpress.com/
+	arch = i686
+	arch = x86_64
+	license = GPL3
+	makedepends = vala
+	makedepends = git
+	depends = pacman-contrib
+	source = git+https://github.com/aarnt/alpm_octopi_utils.git
+	md5sums = SKIP
+
+pkgname = alpm_octopi_utils

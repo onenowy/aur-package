@@ -20,7 +20,7 @@ makedepends=(
 )
 source=("git+https://github.com/aarnt/qt-sudo.git#tag=v${pkgver}")
 #source=("git+https://github.com/aarnt/qt-sudo.git")
-sha256sums=('SKIP')
+sha256sums=('c418f986d7d03b290663574d8a66941c713a914b64c4edfc90b0116e4d689b14')
 
 build() {
   cd qt-sudo

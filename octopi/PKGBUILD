@@ -10,7 +10,7 @@ depends=('alpm_octopi_utils' 'qtermwidget' 'qt-sudo' 'qt6-multimedia' 'qt6-5comp
 makedepends=('git')
 groups=('system')
 source=("git+https://github.com/aarnt/octopi.git#tag=v${pkgver}")
-md5sums=('SKIP')
+md5sums=('4ef88d3a6aa749410f80adc537f25c70')
 
 prepare() {
    cd "${_pkgname}"
