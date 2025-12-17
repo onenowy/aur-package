@@ -34,7 +34,6 @@ jobs:
           else
             echo "Manual build mode: Building ALL packages found."
             # Find all immediate subdirectories containing a PKGBUILD
-            # jq -c ensures single line output to prevent GitHub Actions errors
             ALL_PKGS=$(find . -maxdepth 2 -name PKGBUILD -printf '%h\n' | sed 's|./||' | jq -R . | jq -s -c .)
             
             echo "Detected packages: $ALL_PKGS"
@@ -42,7 +41,6 @@ jobs:
             echo "BUILD_PACKAGES=$ALL_PKGS" >> "$GITHUB_OUTPUT"
           fi
 
-      # [NEW] Create the build script file to avoid YAML syntax errors
       - name: Create Build Script
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         run: |
@@ -50,7 +48,7 @@ jobs:
           #!/bin/bash
           set -e
           
-          # 1. Install dependencies
+          # 1. Install system dependencies
           pacman -Syu --noconfirm git pacman-contrib jq
           
           # 2. Setup build user
@@ -59,33 +57,59 @@ jobs:
           printf 'builduser ALL=(ALL) ALL\n' | tee -a /etc/sudoers
           chown -R builduser:builduser .
           
-          # 3. Optimization & Build Settings (Modify makepkg.conf)
-          
-          # Parallel Compilation
+          # 3. Optimization & Build Settings
           echo 'MAKEFLAGS="-j$(nproc)"' >> /etc/makepkg.conf
-          
-          # C/C++ Optimization (-O3, x86-64-v3)
           echo 'CFLAGS="-march=x86-64-v3 -O3 -pipe -fno-plt"' >> /etc/makepkg.conf
           echo 'CXXFLAGS="-march=x86-64-v3 -O3 -pipe -fno-plt"' >> /etc/makepkg.conf
-          
-          # Rust Optimization
           echo 'RUSTFLAGS="-C opt-level=3 -C target-cpu=x86-64-v3"' >> /etc/makepkg.conf
-          
-          # Disable debug packages (split symbols)
-          # Replaces ' debug' with ' !debug' in OPTIONS array
+          # Disable debug packages
           sed -i 's/ debug/ !debug/g' /etc/makepkg.conf
           
           # 4. Prepare staging directory
           mkdir -p release_dist
           
-          # 5. Build Loop
-          # Parse the JSON environment variable
-          echo "$PACKAGES" | jq -r '.[]' | while read pkg; do
+          # 5. Dependency Sorting Logic
+          # Convert JSON input to a space-separated string
+          RAW_LIST=$(echo "$PACKAGES" | jq -r '.[]')
+          
+          # Define priority groups
+          # - Dependencies must be built FIRST
+          DEPS_FIRST="alpm_octopi_utils qt-sudo"
+          # - Dependents must be built LAST
+          DEPS_LAST="octopi"
+          
+          BUILD_QUEUE=""
+          
+          # Step A: Add Dependencies first (if they exist in the list)
+          for pkg in $DEPS_FIRST; do
+            if echo "$RAW_LIST" | grep -q "^$pkg$"; then
+              BUILD_QUEUE="$BUILD_QUEUE $pkg"
+            fi
+          done
+          
+          # Step B: Add general packages (excluding special ones)
+          for pkg in $RAW_LIST; do
+            # Check if pkg is NOT in DEPS_FIRST and NOT in DEPS_LAST
+            if [[ ! " $DEPS_FIRST $DEPS_LAST " =~ " $pkg " ]]; then
+              BUILD_QUEUE="$BUILD_QUEUE $pkg"
+            fi
+          done
+          
+          # Step C: Add Dependents last
+          for pkg in $DEPS_LAST; do
+            if echo "$RAW_LIST" | grep -q "^$pkg$"; then
+              BUILD_QUEUE="$BUILD_QUEUE $pkg"
+            fi
+          done
+          
+          echo "Build Order: $BUILD_QUEUE"
+          
+          # 6. Build Loop
+          for pkg in $BUILD_QUEUE; do
             echo "--------------------------------------"
             echo "Building package: $pkg"
             echo "--------------------------------------"
             
-            # Check directory existence
             TARGET_DIR="/github/workspace/$pkg"
             if [ ! -d "$TARGET_DIR" ]; then
               echo "Error: Directory $TARGET_DIR does not exist."
@@ -94,19 +118,22 @@ jobs:
             
             cd "$TARGET_DIR"
             
-            # Update checksums
+            # Update checksums & Generate .SRCINFO
             su builduser -c 'updpkgsums'
-            
-            # Generate .SRCINFO
             su builduser -c 'makepkg --printsrcinfo > .SRCINFO'
             
             # Build Package
+            # -s: install missing deps from repos
             su builduser -c 'makepkg -s --noconfirm'
             
-            # Move artifacts
+            # [CRITICAL] Install the built package locally!
+            # This ensures subsequent packages (like octopi) can find this dependency (like qt-sudo)
+            echo "Installing $pkg locally to satisfy future dependencies..."
+            pacman -U --noconfirm *.pkg.tar.zst
+            
+            # Move artifacts to release folder
             mv *.pkg.tar.zst ../release_dist/
             
-            # Return to root for safety
             cd /github/workspace
           done
           EOF
@@ -119,7 +146,6 @@ jobs:
         env:
           PACKAGES: ${{ steps.check.outputs.BUILD_PACKAGES }}
         with:
-          # Execute the script file created above
           args: /bin/bash /github/workspace/build_script.sh
 
       - if: steps.check.outputs.BUILD_REQUIRED == 'true'

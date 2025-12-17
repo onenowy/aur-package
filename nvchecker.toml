@@ -9,3 +9,21 @@ source = "github"
 github = "Jguer/yay"
 use_latest_release = true
 prefix = "v"
+
+[visual-studio-code]
+source = "github"
+github = "microsoft/vscode"
+use_latest_release = true
+prefix = "v"
+
+[qt-sudo]
+source = "github"
+github = "aarnt/qt-sudo"
+use_latest_release = true
+prefix = "v"
+
+[octopi]
+source = "github"
+github = "aarnt/octopi"
+use_latest_release = true
+prefix = "v"
