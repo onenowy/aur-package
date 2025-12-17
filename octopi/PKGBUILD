@@ -6,7 +6,7 @@ pkgdesc="This is Octopi, a powerful Pacman frontend using Qt libs (git checkout)
 url="https://tintaescura.com/projects/octopi/"
 arch=('i686' 'x86_64')
 license=('GPL2')
-depends=('alpm_octopi_utils' 'qtermwidget' 'qt-sudo')
+depends=('alpm_octopi_utils' 'qtermwidget' 'qt-sudo' 'qt6-multimedia' 'qt6-5compat')
 makedepends=('git')
 groups=('system')
 source=("git+https://github.com/aarnt/octopi.git#tag=v${pkgver}")
