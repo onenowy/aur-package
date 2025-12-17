@@ -21,7 +21,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Install dependencies including nvchecker plugins
       - name: Install Dependencies
         run: sudo apt-get install -y python3-pip jq && pip install 'nvchecker[rpmrepo,aur,github]'
 
@@ -30,14 +29,12 @@ jobs:
         run: |
           chmod +x ./update-version.sh
           
-          # CASE 1: Scheduled run or manual check requested
           if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.check_for_updates }}" == "true" ]]; then
             ./update-version.sh
-          
-          # CASE 2: Manual force build (builds all found packages)
           else
             echo "Manual build mode: Building ALL packages found."
-            # [Fix] Added -c to jq to output single-line JSON
+            # Find all immediate subdirectories containing a PKGBUILD
+            # jq -c ensures single line output to prevent GitHub Actions errors
             ALL_PKGS=$(find . -maxdepth 2 -name PKGBUILD -printf '%h\n' | sed 's|./||' | jq -R . | jq -s -c .)
             
             echo "Detected packages: $ALL_PKGS"
@@ -45,66 +42,82 @@ jobs:
             echo "BUILD_PACKAGES=$ALL_PKGS" >> "$GITHUB_OUTPUT"
           fi
 
-      # Iterate through detected packages and build
+      # [NEW] Create the build script file to avoid YAML syntax errors
+      - name: Create Build Script
+        if: steps.check.outputs.BUILD_REQUIRED == 'true'
+        run: |
+          cat << 'EOF' > build_script.sh
+          #!/bin/bash
+          set -e
+          
+          # 1. Install dependencies
+          pacman -Syu --noconfirm git pacman-contrib jq
+          
+          # 2. Setup build user
+          useradd builduser -m
+          passwd -d builduser
+          printf 'builduser ALL=(ALL) ALL\n' | tee -a /etc/sudoers
+          chown -R builduser:builduser .
+          
+          # 3. Optimization Settings (Modify makepkg.conf)
+          # Parallel Compilation
+          echo 'MAKEFLAGS="-j$(nproc)"' >> /etc/makepkg.conf
+          # C/C++ Optimization (-O3, x86-64-v3)
+          echo 'CFLAGS="-march=x86-64-v3 -O3 -pipe -fno-plt"' >> /etc/makepkg.conf
+          echo 'CXXFLAGS="-march=x86-64-v3 -O3 -pipe -fno-plt"' >> /etc/makepkg.conf
+          # Rust Optimization
+          echo 'RUSTFLAGS="-C opt-level=3 -C target-cpu=x86-64-v3"' >> /etc/makepkg.conf
+          
+          # 4. Prepare staging directory
+          mkdir -p release_dist
+          
+          # 5. Build Loop
+          # Parse the JSON environment variable
+          echo "$PACKAGES" | jq -r '.[]' | while read pkg; do
+            echo "--------------------------------------"
+            echo "Building package: $pkg"
+            echo "--------------------------------------"
+            
+            # Check directory existence
+            TARGET_DIR="/github/workspace/$pkg"
+            if [ ! -d "$TARGET_DIR" ]; then
+              echo "Error: Directory $TARGET_DIR does not exist."
+              exit 1
+            fi
+            
+            cd "$TARGET_DIR"
+            
+            # Update checksums
+            su builduser -c 'updpkgsums'
+            
+            # Generate .SRCINFO
+            su builduser -c 'makepkg --printsrcinfo > .SRCINFO'
+            
+            # Build Package
+            su builduser -c 'makepkg -s --noconfirm'
+            
+            # Move artifacts
+            mv *.pkg.tar.zst ../release_dist/
+            
+            # Return to root for safety (though the loop resets vars, cd is persistent)
+            cd /github/workspace
+          done
+          EOF
+          
+          chmod +x build_script.sh
+
       - name: Build Packages
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         uses: docker://archlinux:base-devel
         env:
           PACKAGES: ${{ steps.check.outputs.BUILD_PACKAGES }}
         with:
-          # Use Block Scalar (>-) to fix YAML syntax errors with multi-line strings
-          args: >-
-            /bin/bash -c "
-            pacman -Syu --noconfirm git pacman-contrib jq &&
-            useradd builduser -m &&
-            passwd -d builduser &&
-            printf 'builduser ALL=(ALL) ALL\n' | tee -a /etc/sudoers &&
-            chown -R builduser:builduser . &&
-            
-            # --- Optimization Settings (makepkg.conf) ---
-            # 1. Parallel Compilation: Use all available cores
-            echo 'MAKEFLAGS=\"-j\$(nproc)\"' >> /etc/makepkg.conf &&
-            
-            # 2. C/C++ Optimization: -O3 and x86-64-v3
-            echo 'CFLAGS=\"-march=x86-64-v3 -O3 -pipe -fno-plt\"' >> /etc/makepkg.conf &&
-            echo 'CXXFLAGS=\"-march=x86-64-v3 -O3 -pipe -fno-plt\"' >> /etc/makepkg.conf &&
-            
-            # 3. Rust Optimization: -O3 equivalent and x86-64-v3
-            echo 'RUSTFLAGS=\"-C opt-level=3 -C target-cpu=x86-64-v3\"' >> /etc/makepkg.conf &&
-            # -------------------------------------------
-
-            # Create staging directory
-            mkdir -p release_dist &&
-            
-            # Loop through packages
-            echo \"\$PACKAGES\" | jq -r '.[]' | while read pkg; do
-              echo \"--------------------------------------\" &&
-              echo \"Building package: \$pkg\" &&
-              echo \"--------------------------------------\" &&
-              
-              cd /github/workspace/\$pkg &&
-              
-              # Update checksums
-              su builduser -c 'updpkgsums' &&
-              
-              # Generate .SRCINFO
-              su builduser -c 'makepkg --printsrcinfo > .SRCINFO' &&
-              
-              # Build package
-              su builduser -c 'makepkg -s --noconfirm' &&
-              
-              # Move artifacts to staging
-              mv *.pkg.tar.zst ../release_dist/ &&
-              
-              # Return to root
-              cd .. ;
-            done
-            "
+          # Execute the script file created above
+          args: /bin/bash /github/workspace/build_script.sh
 
       - if: steps.check.outputs.BUILD_REQUIRED == 'true'
         run: sudo chown -R $USER:$USER .
 
-      # Commit changes (PKGBUILD, .SRCINFO)
       - name: Commit Changes
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         uses: stefanzweifel/git-auto-commit-action@v5
@@ -112,11 +125,9 @@ jobs:
           commit_message: "update: packages updated"
           file_pattern: '*/PKGBUILD */.SRCINFO'
 
-      # Generate Repository Database (repo-add)
       - name: Create Repository Database
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         run: |
-          # release_dist folder already exists from previous step
           docker run --rm -v $PWD/release_dist:/repo archlinux:base-devel /bin/bash -c "
             cd /repo && 
             repo-add -n shelter-arch-aur.db.tar.gz *.pkg.tar.zst
