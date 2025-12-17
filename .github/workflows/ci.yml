@@ -59,14 +59,21 @@ jobs:
           printf 'builduser ALL=(ALL) ALL\n' | tee -a /etc/sudoers
           chown -R builduser:builduser .
           
-          # 3. Optimization Settings (Modify makepkg.conf)
+          # 3. Optimization & Build Settings (Modify makepkg.conf)
+          
           # Parallel Compilation
           echo 'MAKEFLAGS="-j$(nproc)"' >> /etc/makepkg.conf
+          
           # C/C++ Optimization (-O3, x86-64-v3)
           echo 'CFLAGS="-march=x86-64-v3 -O3 -pipe -fno-plt"' >> /etc/makepkg.conf
           echo 'CXXFLAGS="-march=x86-64-v3 -O3 -pipe -fno-plt"' >> /etc/makepkg.conf
+          
           # Rust Optimization
           echo 'RUSTFLAGS="-C opt-level=3 -C target-cpu=x86-64-v3"' >> /etc/makepkg.conf
+          
+          # Disable debug packages (split symbols)
+          # Replaces ' debug' with ' !debug' in OPTIONS array
+          sed -i 's/ debug/ !debug/g' /etc/makepkg.conf
           
           # 4. Prepare staging directory
           mkdir -p release_dist
@@ -99,7 +106,7 @@ jobs:
             # Move artifacts
             mv *.pkg.tar.zst ../release_dist/
             
-            # Return to root for safety (though the loop resets vars, cd is persistent)
+            # Return to root for safety
             cd /github/workspace
           done
           EOF
