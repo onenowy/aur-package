@@ -2,11 +2,12 @@ name: Arch Package CI/CD
 
 on:
   schedule:
+    # Run daily at 00:00 UTC
     - cron: '0 0 * * *'
   workflow_dispatch:
     inputs:
       check_for_updates:
-        description: 'Check upstream updates? (Uncheck to build current PKGBUILD as-is)'
+        description: 'Check upstream updates? (Uncheck to build ALL packages as-is)'
         required: false
         default: false
         type: boolean
@@ -20,63 +21,109 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: sudo apt-get install -y libxml2-utils
+      # Install dependencies including nvchecker plugins (rpmrepo, aur, github)
+      - name: Install Dependencies
+        run: sudo apt-get install -y python3-pip jq && pip install 'nvchecker[rpmrepo,aur,github]'
 
-      - id: check
+      - name: Check for Updates
+        id: check
         run: |
           chmod +x ./update-version.sh
+          
+          # CASE 1: Scheduled run or manual check requested
           if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.check_for_updates }}" == "true" ]]; then
             ./update-version.sh
+          
+          # CASE 2: Manual force build (builds all found packages)
           else
-            VER=$(grep "^pkgver=" PKGBUILD | cut -d'=' -f2)
-            REL=$(grep "^pkgrel=" PKGBUILD | cut -d'=' -f2)
-            echo "UPDATE_NEEDED=true" >> "$GITHUB_OUTPUT"
-            echo "NEW_VERSION=${VER}-${REL}" >> "$GITHUB_OUTPUT"
+            echo "Manual build mode: Building ALL packages found."
+            # Find all immediate subdirectories containing a PKGBUILD
+            ALL_PKGS=$(find . -maxdepth 2 -name PKGBUILD -printf '%h\n' | sed 's|./||' | jq -R . | jq -s .)
+            
+            echo "Detected packages: $ALL_PKGS"
+            echo "BUILD_REQUIRED=true" >> "$GITHUB_OUTPUT"
+            echo "BUILD_PACKAGES=$ALL_PKGS" >> "$GITHUB_OUTPUT"
           fi
 
-      - if: steps.check.outputs.UPDATE_NEEDED == 'true'
+      # Iterate through detected packages and build
+      - name: Build Packages
+        if: steps.check.outputs.BUILD_REQUIRED == 'true'
         uses: docker://archlinux:base-devel
+        env:
+          PACKAGES: ${{ steps.check.outputs.BUILD_PACKAGES }}
         with:
           args: /bin/bash -c "
-            pacman -Syu --noconfirm git &&
+            # Setup env and create build user
+            pacman -Syu --noconfirm git pacman-contrib jq &&
             useradd builduser -m &&
             passwd -d builduser &&
             printf 'builduser ALL=(ALL) ALL\n' | tee -a /etc/sudoers &&
             chown -R builduser:builduser . &&
-            su builduser -c 'makepkg --printsrcinfo > .SRCINFO' &&
-            su builduser -c 'makepkg -s --noconfirm'
+            
+            # Create staging directory
+            mkdir -p release_dist &&
+            
+            # Parse JSON list and loop
+            echo '$PACKAGES' | jq -r '.[]' | while read pkg; do
+              echo \"--------------------------------------\"
+              echo \"Building package: \$pkg\"
+              echo \"--------------------------------------\"
+              
+              cd /github/workspace/\$pkg
+              
+              # 1. Update checksums (using updpkgsums)
+              su builduser -c 'updpkgsums'
+              
+              # 2. Generate .SRCINFO
+              su builduser -c 'makepkg --printsrcinfo > .SRCINFO'
+              
+              # 3. Build package
+              # -s: install deps, --noconfirm: auto-yes
+              su builduser -c 'makepkg -s --noconfirm'
+              
+              # 4. Move artifacts to staging
+              mv *.pkg.tar.zst ../release_dist/
+              
+              # Return to root
+              cd ..
+            done
             "
 
-      - if: steps.check.outputs.UPDATE_NEEDED == 'true'
+      - if: steps.check.outputs.BUILD_REQUIRED == 'true'
         run: sudo chown -R $USER:$USER .
 
-      - if: steps.check.outputs.UPDATE_NEEDED == 'true'
+      # Commit changes (PKGBUILD, .SRCINFO)
+      - name: Commit Changes
+        if: steps.check.outputs.BUILD_REQUIRED == 'true'
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "update: ${{ steps.check.outputs.NEW_VERSION }}"
-          file_pattern: 'PKGBUILD .SRCINFO'
+          commit_message: "update: packages updated"
+          file_pattern: '*/PKGBUILD */.SRCINFO'
 
-      - if: steps.check.outputs.UPDATE_NEEDED == 'true'
+      # Generate Repository Database (repo-add)
+      - name: Create Repository Database
+        if: steps.check.outputs.BUILD_REQUIRED == 'true'
         run: |
-          mkdir -p release_dist
-          mv *.pkg.tar.zst release_dist/
+          # release_dist folder already exists from previous step
+          
+          # Run repo-add
           docker run --rm -v $PWD/release_dist:/repo archlinux:base-devel /bin/bash -c "
             cd /repo && 
             repo-add -n shelter-arch-aur.db.tar.gz *.pkg.tar.zst
           "
 
-      - if: steps.check.outputs.UPDATE_NEEDED == 'true'
+      - if: steps.check.outputs.BUILD_REQUIRED == 'true'
         uses: dev-drprasad/delete-tag-and-release@v1.1
         with:
           tag_name: x86_64
           delete_release: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
-      - if: steps.check.outputs.UPDATE_NEEDED == 'true'
+      - if: steps.check.outputs.BUILD_REQUIRED == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: x86_64
           name: "Arch Linux Repository (x86_64)"
-          body: "Package Updated: ${{ steps.check.outputs.NEW_VERSION }}"
+          body: "Packages Updated."
           files: release_dist/*
           token: ${{ secrets.GITHUB_TOKEN }}

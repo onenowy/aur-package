@@ -1,43 +1,51 @@
 #!/bin/bash
 set -e
 
-PKG_NAME="microsoft-edge-stable"
-REPO_BASE="https://packages.microsoft.com/yumrepos/edge"
+# Run nvchecker (using config file)
+echo "Running nvchecker..."
+nvchecker -c nvchecker.toml --logger json > nvchecker.log 2>&1 || true
 
-echo "Checking for updates..."
+# Array to store packages requiring updates
+BUILD_LIST=()
 
-REPO_METADATA=$(curl -sSf "$REPO_BASE/repodata/repomd.xml" | \
-    xmllint --xpath 'string(//*[local-name()="data"][@type="other"]/*[local-name()="location"]/@href)' -)
+# Parse updated package info from nvchecker log
+# Use jq to extract name and version where event is 'updated'
+while read -r name version; do
+    if [ -z "$name" ]; then continue; fi
+    
+    echo "Update detected for: $name ($version)"
+    
+    if [ -d "$name" ] && [ -f "$name/PKGBUILD" ]; then
+        echo "Updating PKGBUILD for $name..."
+        
+        # Go to directory and run sed
+        (
+            cd "$name"
+            # Update version
+            sed -i "s/^pkgver=.*/pkgver=${version}/" PKGBUILD
+            # Reset pkgrel
+            sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
+            
+            # Note: sha256sums is handled by updpkgsums in the build step
+        )
+        # Add to build list
+        BUILD_LIST+=("$name")
+    else
+        echo "Warning: Directory or PKGBUILD not found for $name"
+    fi
+done < <(grep '"event": "updated"' nvchecker.log | jq -r '.name + " " + .version')
 
-LATEST_VER=$(curl -sSf "$REPO_BASE/$REPO_METADATA" | \
-    gzip -dc | \
-    xmllint --xpath "string(//*[local-name()=\"package\"][@name=\"$PKG_NAME\"][last()]/*[local-name()=\"version\"]/@ver)" -)
-
-if [ -z "$LATEST_VER" ]; then
-    echo "Error: Failed to fetch version info."
-    exit 1
-fi
-
-CURRENT_VER=$(grep "^pkgver=" PKGBUILD | cut -d'=' -f2)
-
-echo "Remote: $LATEST_VER"
-echo "Local:  $CURRENT_VER"
-
-if [ "$LATEST_VER" == "$CURRENT_VER" ]; then
-    echo "Already up to date."
-    echo "UPDATE_NEEDED=false" >> "$GITHUB_OUTPUT"
+# Output results (JSON array for GitHub Actions)
+if [ ${#BUILD_LIST[@]} -eq 0 ]; then
+    echo "No updates found."
+    echo "BUILD_REQUIRED=false" >> "$GITHUB_OUTPUT"
 else
-    echo "New version found! Updating PKGBUILD..."
-
-    sed -i "s/^pkgver=.*/pkgver=${LATEST_VER}/" PKGBUILD
-    sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
-
-    NEW_SHA256=$(curl -sSf "$REPO_BASE/$REPO_METADATA" | \
-        gzip -dc | \
-        xmllint --xpath "string(//*[local-name()=\"package\"][@name=\"$PKG_NAME\"][last()]/@pkgid)" -)
-
-    sed -i "s/^sha256sums=('.*/sha256sums=('${NEW_SHA256}'/" PKGBUILD
-
-    echo "UPDATE_NEEDED=true" >> "$GITHUB_OUTPUT"
-    echo "NEW_VERSION=${LATEST_VER}" >> "$GITHUB_OUTPUT"
+    # Convert to JSON array
+    JSON_LIST=$(printf '%s\n' "${BUILD_LIST[@]}" | jq -R . | jq -s .)
+    echo "Build List: $JSON_LIST"
+    
+    echo "BUILD_REQUIRED=true" >> "$GITHUB_OUTPUT"
+    echo "BUILD_PACKAGES=$JSON_LIST" >> "$GITHUB_OUTPUT"
 fi
+
+rm -f nvchecker.log
