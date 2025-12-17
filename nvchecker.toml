@@ -4,12 +4,6 @@ repo = "https://packages.microsoft.com/yumrepos/edge"
 pkg = "microsoft-edge-stable"
 arch = "x86_64"
 
-[visual-studio-code]
-source = "github"
-github = "microsoft/vscode"
-use_latest_release = true
-prefix = "v"
-
 [yay]
 source = "github"
 github = "Jguer/yay"
