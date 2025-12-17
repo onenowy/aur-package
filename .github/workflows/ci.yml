@@ -59,6 +59,21 @@ jobs:
             passwd -d builduser &&
             printf 'builduser ALL=(ALL) ALL\n' | tee -a /etc/sudoers &&
             chown -R builduser:builduser . &&
+
+            # --- Optimization Settings (makepkg.conf) ---
+            
+            # 1. Parallel Compilation: Use all available cores
+            sed -i \"s/^#MAKEFLAGS.*/MAKEFLAGS=\\\"-j\$(nproc)\\\"/\" /etc/makepkg.conf
+            
+            # 2. C/C++ Optimization: Change -O2 to -O3 and set architecture to x86-64-v3
+            sed -i 's/-march=x86-64 -mtune=generic/-march=x86-64-v3/g' /etc/makepkg.conf
+            sed -i 's/-O2/-O3/g' /etc/makepkg.conf
+            
+            # 3. Rust Optimization: Equivalent to -O3 and x86-64-v3 architecture
+            # Appending RUSTFLAGS to makepkg.conf ensures it's exported for builds
+            echo 'RUSTFLAGS=\"-C opt-level=3 -C target-cpu=x86-64-v3\"' >> /etc/makepkg.conf
+            
+            # -------------------------------------------
             
             # Create staging directory
             mkdir -p release_dist &&
@@ -78,7 +93,6 @@ jobs:
               su builduser -c 'makepkg --printsrcinfo > .SRCINFO'
               
               # 3. Build package
-              # -s: install deps, --noconfirm: auto-yes
               su builduser -c 'makepkg -s --noconfirm'
               
               # 4. Move artifacts to staging
