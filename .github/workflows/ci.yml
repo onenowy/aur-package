@@ -2,6 +2,7 @@ name: Arch Package CI/CD
 
 on:
   schedule:
+    # Run daily at 00:00 UTC
     - cron: '0 0 * * *'
   workflow_dispatch:
     inputs:
@@ -20,6 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Install dependencies including nvchecker plugins
       - name: Install Dependencies
         run: sudo apt-get install -y python3-pip jq && pip install 'nvchecker[rpmrepo,aur,github]'
 
@@ -28,63 +30,82 @@ jobs:
         run: |
           chmod +x ./update-version.sh
           
+          # CASE 1: Scheduled run or manual check requested
           if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.check_for_updates }}" == "true" ]]; then
             ./update-version.sh
+          
+          # CASE 2: Manual force build (builds all found packages)
           else
             echo "Manual build mode: Building ALL packages found."
+            # Find all immediate subdirectories containing a PKGBUILD
             ALL_PKGS=$(find . -maxdepth 2 -name PKGBUILD -printf '%h\n' | sed 's|./||' | jq -R . | jq -s .)
+            
             echo "Detected packages: $ALL_PKGS"
             echo "BUILD_REQUIRED=true" >> "$GITHUB_OUTPUT"
             echo "BUILD_PACKAGES=$ALL_PKGS" >> "$GITHUB_OUTPUT"
           fi
 
+      # Iterate through detected packages and build
       - name: Build Packages
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         uses: docker://archlinux:base-devel
         env:
           PACKAGES: ${{ steps.check.outputs.BUILD_PACKAGES }}
         with:
-          args: /bin/bash -c "
-            # 1. Setup env and build user
+          # Use Block Scalar (>-) to strictly adhere to YAML syntax for multi-line strings
+          args: >-
+            /bin/bash -c "
             pacman -Syu --noconfirm git pacman-contrib jq &&
             useradd builduser -m &&
             passwd -d builduser &&
             printf 'builduser ALL=(ALL) ALL\n' | tee -a /etc/sudoers &&
             chown -R builduser:builduser . &&
-
-            # 2. Optimization Settings (Append to makepkg.conf)
-            # Use echo to avoid YAML escaping issues. 
-            # Note: makepkg.conf is sourced, so appending overrides previous values.
+            
+            # --- Optimization Settings (Appended to makepkg.conf) ---
+            # 1. Parallel Compilation: Use all available cores
             echo 'MAKEFLAGS=\"-j\$(nproc)\"' >> /etc/makepkg.conf &&
+            
+            # 2. C/C++ Optimization: -O3 and x86-64-v3 architecture
             echo 'CFLAGS=\"-march=x86-64-v3 -O3 -pipe -fno-plt\"' >> /etc/makepkg.conf &&
             echo 'CXXFLAGS=\"-march=x86-64-v3 -O3 -pipe -fno-plt\"' >> /etc/makepkg.conf &&
-            echo 'RUSTFLAGS=\"-C opt-level=3 -C target-cpu=x86-64-v3\"' >> /etc/makepkg.conf &&
             
-            # 3. Create staging directory
+            # 3. Rust Optimization: -O3 equivalent and x86-64-v3 architecture
+            # Note: Modern makepkg exports RUSTFLAGS if defined in config
+            echo 'RUSTFLAGS=\"-C opt-level=3 -C target-cpu=x86-64-v3\"' >> /etc/makepkg.conf &&
+            # --------------------------------------------------------
+
+            # Create staging directory
             mkdir -p release_dist &&
             
-            # 4. Parse JSON list and loop
-            echo '$PACKAGES' | jq -r '.[]' | while read pkg; do
-              echo \"--------------------------------------\"
-              echo \"Building package: \$pkg\"
-              echo \"--------------------------------------\"
+            # Loop through packages using the environment variable
+            echo \"\$PACKAGES\" | jq -r '.[]' | while read pkg; do
+              echo \"--------------------------------------\" &&
+              echo \"Building package: \$pkg\" &&
+              echo \"--------------------------------------\" &&
               
-              cd /github/workspace/\$pkg
+              cd /github/workspace/\$pkg &&
               
-              # Update checksums and build
+              # Update checksums
               su builduser -c 'updpkgsums' &&
-              su builduser -c 'makepkg --printsrcinfo > .SRCINFO' &&
-              su builduser -c 'makepkg -s --noconfirm'
               
-              # Move artifacts
-              mv *.pkg.tar.zst ../release_dist/
-              cd ..
+              # Generate .SRCINFO
+              su builduser -c 'makepkg --printsrcinfo > .SRCINFO' &&
+              
+              # Build package
+              su builduser -c 'makepkg -s --noconfirm' &&
+              
+              # Move artifacts to staging
+              mv *.pkg.tar.zst ../release_dist/ &&
+              
+              # Return to root
+              cd .. ;
             done
             "
 
       - if: steps.check.outputs.BUILD_REQUIRED == 'true'
         run: sudo chown -R $USER:$USER .
 
+      # Commit changes (PKGBUILD, .SRCINFO)
       - name: Commit Changes
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         uses: stefanzweifel/git-auto-commit-action@v5
@@ -92,6 +113,7 @@ jobs:
           commit_message: "update: packages updated"
           file_pattern: '*/PKGBUILD */.SRCINFO'
 
+      # Generate Repository Database (repo-add)
       - name: Create Repository Database
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         run: |
