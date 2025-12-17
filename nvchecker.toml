@@ -10,12 +10,6 @@ github = "microsoft/vscode"
 use_latest_release = true
 prefix = "v"
 
-[pacseek]
-source = "github"
-github = "moson-mo/pacseek"
-use_latest_release = true
-prefix = "v"
-
 [yay]
 source = "github"
 github = "Jguer/yay"
