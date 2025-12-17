@@ -9,7 +9,6 @@ nvchecker -c nvchecker.toml --logger json > nvchecker.log 2>&1 || true
 BUILD_LIST=()
 
 # Parse updated package info from nvchecker log
-# Use jq to extract name and version where event is 'updated'
 while read -r name version; do
     if [ -z "$name" ]; then continue; fi
     
@@ -25,8 +24,6 @@ while read -r name version; do
             sed -i "s/^pkgver=.*/pkgver=${version}/" PKGBUILD
             # Reset pkgrel
             sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
-            
-            # Note: sha256sums is handled by updpkgsums in the build step
         )
         # Add to build list
         BUILD_LIST+=("$name")
@@ -41,7 +38,6 @@ if [ ${#BUILD_LIST[@]} -eq 0 ]; then
     echo "BUILD_REQUIRED=false" >> "$GITHUB_OUTPUT"
 else
     # Convert to JSON array (Compact mode: -c to ensure single line)
-    # Changed: Added -c to the final jq command
     JSON_LIST=$(printf '%s\n' "${BUILD_LIST[@]}" | jq -R . | jq -s -c .)
     echo "Build List: $JSON_LIST"
     
