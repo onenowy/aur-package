@@ -12,9 +12,15 @@ BUILD_LIST=()
 while read -r name version; do
     if [ -z "$name" ]; then continue; fi
     
-    echo "Update detected for: $name ($version)"
-    
     if [ -d "$name" ] && [ -f "$name/PKGBUILD" ]; then
+        current_ver=$(grep "^pkgver=" "$name/PKGBUILD" | cut -d'=' -f2)
+
+        if [ "$current_ver" == "$version" ]; then
+            echo "Skipping $name: Already at version $version"
+            continue
+        fi
+
+        echo "Update detected for $name: $current_ver -> $version"
         echo "Updating PKGBUILD for $name..."
         
         # Go to directory and run sed
@@ -22,7 +28,7 @@ while read -r name version; do
             cd "$name"
             # Update version
             sed -i "s/^pkgver=.*/pkgver=${version}/" PKGBUILD
-            # Reset pkgrel
+            # Reset pkgrel 
             sed -i "s/^pkgrel=.*/pkgrel=1/" PKGBUILD
         )
         # Add to build list
