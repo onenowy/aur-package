@@ -40,7 +40,6 @@ jobs:
             echo "BUILD_PACKAGES=$ALL_PKGS" >> "$GITHUB_OUTPUT"
           fi
 
-      # [수정됨] 스크립트 생성(cat) 단계 삭제됨
       
       - name: Make Scripts Executable
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
@@ -52,7 +51,6 @@ jobs:
         env:
           PACKAGES: ${{ steps.check.outputs.BUILD_PACKAGES }}
         with:
-          # [수정됨] 이제 레포지토리에 있는 파일을 직접 실행합니다.
           args: /bin/bash /github/workspace/build_script.sh
 
       - if: steps.check.outputs.BUILD_REQUIRED == 'true'
