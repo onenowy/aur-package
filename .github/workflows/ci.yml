@@ -69,8 +69,15 @@ jobs:
           mkdir -p release_dist
           
           # 5. Dependency Sorting Logic
-          # Convert JSON input to a space-separated string
+          # Convert JSON input to a space-separated string (newline separated inside variable)
           RAW_LIST=$(echo "$PACKAGES" | jq -r '.[]')
+          
+          # [Auto-Fix] Inject dependencies for octopi if present
+          if echo "$RAW_LIST" | grep -q "^octopi$"; then
+            echo ":: Octopi detected. Injecting dependencies (qt-sudo, alpm_octopi_utils)..."
+            # Append dependencies to the list
+            RAW_LIST="$RAW_LIST"$'\n'"alpm_octopi_utils"$'\n'"qt-sudo"
+          fi
           
           # Define priority groups
           # - Dependencies must be built FIRST
