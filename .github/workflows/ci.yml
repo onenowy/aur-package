@@ -63,26 +63,42 @@ jobs:
           commit_message: "update: packages updated"
           file_pattern: '*/PKGBUILD */.SRCINFO'
 
+      # [Added] Download existing DB if available (to preserve existing package info)
+      - name: Fetch existing repository database
+        if: steps.check.outputs.BUILD_REQUIRED == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p release_dist
+          echo "Fetching existing database..."
+          # Ignore errors if release or DB file doesn't exist (|| true)
+          gh release download x86_64 -p "shelter-arch-aur.db.tar.gz" -D release_dist || true
+          gh release download x86_64 -p "shelter-arch-aur.files.tar.gz" -D release_dist || true
+
       - name: Create Repository Database
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         run: |
+          # If existing DB file exists, repo-add reads it and appends new packages.
           docker run --rm -v $PWD/release_dist:/repo archlinux:base-devel /bin/bash -c "
             cd /repo && 
             repo-add -n shelter-arch-aur.db.tar.gz *.pkg.tar.zst
           "
 
-      - if: steps.check.outputs.BUILD_REQUIRED == 'true'
-        uses: dev-drprasad/delete-tag-and-release@v1.1
-        with:
-          tag_name: x86_64
-          delete_release: true
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+      # [Removed] The 'delete-tag-and-release' step is removed to preserve existing packages.
 
-      - if: steps.check.outputs.BUILD_REQUIRED == 'true'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: x86_64
-          name: "Arch Linux Repository (x86_64)"
-          body: "Packages Updated."
-          files: release_dist/*
-          token: ${{ secrets.GITHUB_TOKEN }}
+      # [Modified] Upload files using gh cli (overwrite mode)
+      - name: Upload Packages
+        if: steps.check.outputs.BUILD_REQUIRED == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 1. Check if release exists, create if not
+          if ! gh release view x86_64 >/dev/null 2>&1; then
+            echo "Creating release x86_64..."
+            gh release create x86_64 --title "Arch Linux Repository (x86_64)" --notes "Arch Linux AUR Repository"
+          fi
+          
+          # 2. Upload files (overwrite existing files with --clobber option)
+          # Only newly built packages and updated DB files are uploaded; existing package files are preserved.
+          echo "Uploading assets..."
+          gh release upload x86_64 release_dist/* --clobber
