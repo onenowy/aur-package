@@ -28,9 +28,9 @@ github = "aarnt/octopi"
 use_latest_release = true
 prefix = "v"
 
-[udev-usb-sync]
-source = "gitlab"
-host = "gitlab.manjaro.org"
-gitlab = "applications/udev-usb-sync"
-use_latest_release = true
-prefix = "v"
+# [udev-usb-sync]
+# source = "gitlab"
+# host = "gitlab.manjaro.org"
+# gitlab = "applications/udev-usb-sync"
+# use_latest_release = true
+# prefix = "v"
