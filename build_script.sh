@@ -116,8 +116,10 @@ for pkg_dir in "${BUILD_QUEUE[@]}"; do
   su builduser -c 'updpkgsums'
   su builduser -c 'makepkg --printsrcinfo > .SRCINFO'
   
-  # Build package (install missing deps with -s)
-  su builduser -c 'makepkg -s --noconfirm'
+  # Build package
+  # -s: install missing deps
+  # -c: clean up work files (src/pkg directories) after build
+  su builduser -c 'makepkg -s -c --noconfirm'
   
   # [IMPORTANT] Install the built package locally to satisfy future dependencies
   echo "Installing $pkg_dir locally to satisfy future dependencies..."
@@ -129,6 +131,12 @@ for pkg_dir in "${BUILD_QUEUE[@]}"; do
   
   if [ ${#pkg_files[@]} -gt 0 ]; then
       pacman -U --noconfirm "${pkg_files[@]}"
+      
+      # [NEW] Record the package name for cleanup logic in CI
+      # Extract pkgname from .SRCINFO
+      current_pkgname=$(grep "pkgname = " .SRCINFO | head -n1 | cut -d= -f2 | xargs)
+      echo "$current_pkgname" >> ../release_dist/updated_pkgnames.txt
+      
       # Move artifacts to release directory
       mv "${pkg_files[@]}" ../release_dist/
   else

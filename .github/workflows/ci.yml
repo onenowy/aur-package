@@ -33,6 +33,7 @@ jobs:
             ./update-version.sh
           else
             echo "Manual build mode: Building ALL packages found."
+            # Find all immediate subdirectories containing a PKGBUILD
             ALL_PKGS=$(find . -maxdepth 2 -name PKGBUILD -printf '%h\n' | sed 's|./||' | jq -R . | jq -s -c .)
             
             echo "Detected packages: $ALL_PKGS"
@@ -40,7 +41,6 @@ jobs:
             echo "BUILD_PACKAGES=$ALL_PKGS" >> "$GITHUB_OUTPUT"
           fi
 
-      
       - name: Make Scripts Executable
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         run: chmod +x ./build_script.sh
@@ -63,7 +63,7 @@ jobs:
           commit_message: "update: packages updated"
           file_pattern: '*/PKGBUILD */.SRCINFO'
 
-      # [Added] Download existing DB if available (to preserve existing package info)
+      # [NEW] Download existing DB if available (to preserve existing package info)
       - name: Fetch existing repository database
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         env:
@@ -84,9 +84,46 @@ jobs:
             repo-add -n shelter-arch-aur.db.tar.gz *.pkg.tar.zst
           "
 
-      # [Removed] The 'delete-tag-and-release' step is removed to preserve existing packages.
+      # [NEW] Clean up old versions of updated packages
+      - name: Remove Old Versions
+        if: steps.check.outputs.BUILD_REQUIRED == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 1. Check if we have packages to clean up
+          if [ -f release_dist/updated_pkgnames.txt ]; then
+            echo "Identifying old assets to remove..."
+            
+            # Get list of ALL current assets in the release (names only)
+            # If release doesn't exist yet, this might fail, so ignore error
+            gh release view x86_64 --json assets -q '.assets[].name' > current_assets.txt || touch current_assets.txt
+            
+            # 2. Iterate over updated packages
+            while read -r pkgname; do
+              echo ":: Processing cleanup for: $pkgname"
+              
+              # Get the filename of the NEW package we just built (e.g., octopi-1.1-1-x86_64.pkg.tar.zst)
+              # (There might be debug packages, so we filter for standard pkg)
+              new_files=$(ls release_dist/${pkgname}-[0-9]*.pkg.tar.zst | xargs -n1 basename)
+              
+              # 3. Find OLD assets in the release matching this package
+              # Match pattern: "^pkgname-[number]" to avoid matching similar names (e.g. octopi vs octopi-notifier)
+              grep "^${pkgname}-[0-9]" current_assets.txt | while read -r asset; do
+                
+                # If the asset on GitHub is NOT in our new build list, it's an old version -> DELETE
+                if [[ "$new_files" != *"$asset"* ]]; then
+                   echo "   Deleting old version: $asset"
+                   gh release delete-asset x86_64 "$asset" -y
+                else
+                   echo "   Keeping current version: $asset"
+                fi
+              done
+            done < release_dist/updated_pkgnames.txt
+          else
+            echo "No packages updated, skipping cleanup."
+          fi
 
-      # [Modified] Upload files using gh cli (overwrite mode)
+      # [NEW] Upload files using gh cli (overwrite mode)
       - name: Upload Packages
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         env:
