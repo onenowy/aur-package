@@ -33,7 +33,6 @@ jobs:
             ./update-version.sh
           else
             echo "Manual build mode: Building ALL packages found."
-            # Find all immediate subdirectories containing a PKGBUILD
             ALL_PKGS=$(find . -maxdepth 2 -name PKGBUILD -printf '%h\n' | sed 's|./||' | jq -R . | jq -s -c .)
             
             echo "Detected packages: $ALL_PKGS"
@@ -63,7 +62,7 @@ jobs:
           commit_message: "update: packages updated"
           file_pattern: '*/PKGBUILD */.SRCINFO'
 
-      # [NEW] Download existing DB if available (to preserve existing package info)
+      # [Modified] Download existing DB
       - name: Fetch existing repository database
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         env:
@@ -71,71 +70,111 @@ jobs:
         run: |
           mkdir -p release_dist
           echo "Fetching existing database..."
-          # Ignore errors if release or DB file doesn't exist (|| true)
           gh release download x86_64 -p "shelter-arch-aur.db.tar.gz" -D release_dist || true
           gh release download x86_64 -p "shelter-arch-aur.files.tar.gz" -D release_dist || true
 
+      # [NEW] Clean up Orphaned Packages (Deleted from local)
+      - name: Clean up Orphaned Packages
+        if: steps.check.outputs.BUILD_REQUIRED == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Checking for orphaned packages..."
+          
+          # 1. Get list of valid local package directories
+          find . -maxdepth 2 -name PKGBUILD -printf '%h\n' | sed 's|./||' | sort > local_pkgs.txt
+          
+          # 2. Get list of remote assets from GitHub Release
+          # If release doesn't exist yet, ignore error
+          gh release view x86_64 --json assets -q '.assets[].name' | grep '\.pkg\.tar\.zst$' | sort > remote_assets.txt || touch remote_assets.txt
+          
+          # 3. Identify orphans
+          touch pkgs_to_remove.txt
+          
+          while read -r asset; do
+            # Extract pkgname from filename (heuristic: name-ver-rel-arch.pkg.tar.zst)
+            # Remove extension
+            basename=${asset%.pkg.tar.zst}
+            # Remove last 3 parts (arch, rel, ver) separated by hyphens
+            # e.g. octopi-0.18.1-1-x86_64 -> octopi
+            pkgname=$(echo "$basename" | rev | cut -d- -f4- | rev)
+            
+            # Check if this pkgname exists in local_pkgs.txt
+            if ! grep -Fxq "$pkgname" local_pkgs.txt; then
+              echo ":: Orphan detected: $pkgname (File: $asset)"
+              
+              # Delete asset from GitHub immediately
+              gh release delete-asset x86_64 "$asset" -y
+              
+              # Add pkgname to removal list for DB update
+              echo "$pkgname" >> pkgs_to_remove.txt
+            fi
+          done < remote_assets.txt
+          
+          # Move removal list to release_dist so Docker can see it
+          if [ -f pkgs_to_remove.txt ]; then
+             mv pkgs_to_remove.txt release_dist/
+          fi
+
+      # [Modified] Create/Update Repository Database (Handle removals)
       - name: Create Repository Database
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         run: |
-          # If existing DB file exists, repo-add reads it and appends new packages.
           docker run --rm -v $PWD/release_dist:/repo archlinux:base-devel /bin/bash -c "
-            cd /repo && 
-            repo-add -n shelter-arch-aur.db.tar.gz *.pkg.tar.zst
+            cd /repo
+            
+            # 1. Remove orphaned packages from DB if list exists
+            if [ -f pkgs_to_remove.txt ]; then
+              echo 'Removing orphaned packages from DB...'
+              # Read file into array and remove duplicates
+              mapfile -t to_remove < <(sort -u pkgs_to_remove.txt)
+              if [ \${#to_remove[@]} -gt 0 ]; then
+                 # Run repo-remove (ignore error if pkg not in DB)
+                 repo-remove shelter-arch-aur.db.tar.gz \"\${to_remove[@]}\" || true
+              fi
+              rm pkgs_to_remove.txt
+            fi
+            
+            # 2. Add new packages to DB
+            shopt -s nullglob
+            files=(*.pkg.tar.zst)
+            if [ \${#files[@]} -gt 0 ]; then
+              echo 'Adding new packages to DB...'
+              repo-add -n shelter-arch-aur.db.tar.gz \"\${files[@]}\"
+            fi
           "
 
-      # [NEW] Clean up old versions of updated packages
+      # [Maintained] Remove Old Versions of Updated Packages
       - name: Remove Old Versions
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 1. Check if we have packages to clean up
           if [ -f release_dist/updated_pkgnames.txt ]; then
             echo "Identifying old assets to remove..."
-            
-            # Get list of ALL current assets in the release (names only)
-            # If release doesn't exist yet, this might fail, so ignore error
             gh release view x86_64 --json assets -q '.assets[].name' > current_assets.txt || touch current_assets.txt
             
-            # 2. Iterate over updated packages
             while read -r pkgname; do
               echo ":: Processing cleanup for: $pkgname"
-              
-              # Get the filename of the NEW package we just built (e.g., octopi-1.1-1-x86_64.pkg.tar.zst)
-              # (There might be debug packages, so we filter for standard pkg)
               new_files=$(ls release_dist/${pkgname}-[0-9]*.pkg.tar.zst | xargs -n1 basename)
               
-              # 3. Find OLD assets in the release matching this package
-              # Match pattern: "^pkgname-[number]" to avoid matching similar names (e.g. octopi vs octopi-notifier)
               grep "^${pkgname}-[0-9]" current_assets.txt | while read -r asset; do
-                
-                # If the asset on GitHub is NOT in our new build list, it's an old version -> DELETE
                 if [[ "$new_files" != *"$asset"* ]]; then
                    echo "   Deleting old version: $asset"
                    gh release delete-asset x86_64 "$asset" -y
-                else
-                   echo "   Keeping current version: $asset"
                 fi
               done
             done < release_dist/updated_pkgnames.txt
-          else
-            echo "No packages updated, skipping cleanup."
           fi
 
-      # [NEW] Upload files using gh cli (overwrite mode)
       - name: Upload Packages
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 1. Check if release exists, create if not
           if ! gh release view x86_64 >/dev/null 2>&1; then
-            echo "Creating release x86_64..."
             gh release create x86_64 --title "Arch Linux Repository (x86_64)" --notes "Arch Linux AUR Repository"
           fi
           
-          # 2. Upload files (overwrite existing files with --clobber option)
-          # Only newly built packages and updated DB files are uploaded; existing package files are preserved.
           echo "Uploading assets..."
           gh release upload x86_64 release_dist/* --clobber
