@@ -28,6 +28,7 @@ mkdir -p release_dist
 # ==============================================================================
 declare -A SPECIAL_DEPS
 DEP_FILE="dependencies.json"
+REQUIRED_DEPS_LIST=""
 
 echo ">> Loading dependencies from $DEP_FILE..."
 
@@ -37,13 +38,20 @@ if [[ -f "$DEP_FILE" ]]; then
 
     for pkg in $PKG_KEYS; do
         # 2. Extract dependencies array and join them with spaces
-        # Example: ["a", "b"] -> "a b"
         deps=$(jq -r ".[\"$pkg\"] | join(\" \")" "$DEP_FILE")
         
-        # 3. Assign to associative array
+        # 3. Assign to associative array for build ordering
         SPECIAL_DEPS["$pkg"]="$deps"
         echo "   [Config] Loaded dependency: '$pkg' requires '$deps'"
     done
+    
+    # [NEW] Create a flat list of ALL packages that are required as dependencies
+    # Extract all values from JSON and remove duplicates to know which ones MUST be installed
+    REQUIRED_DEPS_LIST=$(jq -r 'values[] | .[]' "$DEP_FILE" | sort -u)
+    echo "---------------------------------------------------"
+    echo "   [Config] Packages marked as required dependencies:"
+    echo "$REQUIRED_DEPS_LIST"
+    echo "---------------------------------------------------"
 else
     echo "   [Warning] $DEP_FILE not found. Skipping custom dependency loading."
 fi
@@ -121,20 +129,33 @@ for pkg_dir in "${BUILD_QUEUE[@]}"; do
   # -c: clean up work files (src/pkg directories) after build
   su builduser -c 'makepkg -s -c --noconfirm'
   
-  # [IMPORTANT] Install the built package locally to satisfy future dependencies
-  echo "Installing $pkg_dir locally to satisfy future dependencies..."
-  
   # Enable nullglob to handle cases with no matching files
   shopt -s nullglob
   pkg_files=(*.pkg.tar.zst)
   shopt -u nullglob
   
   if [ ${#pkg_files[@]} -gt 0 ]; then
-      pacman -U --noconfirm "${pkg_files[@]}"
       
-      # [NEW] Record the package name for cleanup logic in CI
-      # Extract pkgname from .SRCINFO
+      # Extract pkgname from .SRCINFO to check if it's a required dependency
       current_pkgname=$(grep "pkgname = " .SRCINFO | head -n1 | cut -d= -f2 | xargs)
+      
+      # [NEW] Check if this package is required by others (listed in JSON values)
+      # Only install locally if it's in the REQUIRED_DEPS_LIST
+      IS_REQUIRED=false
+      if [[ -n "$REQUIRED_DEPS_LIST" ]]; then
+          if echo "$REQUIRED_DEPS_LIST" | grep -Fqx "$current_pkgname"; then
+              IS_REQUIRED=true
+          fi
+      fi
+      
+      if [ "$IS_REQUIRED" = true ]; then
+          echo ":: Installing $current_pkgname locally (Required by other packages)..."
+          pacman -U --noconfirm "${pkg_files[@]}"
+      else
+          echo ":: Skipping local installation for $current_pkgname (Not listed as a dependency in JSON)."
+      fi
+
+      # Record the package name for cleanup logic in CI
       echo "$current_pkgname" >> ../release_dist/updated_pkgnames.txt
       
       # Move artifacts to release directory
