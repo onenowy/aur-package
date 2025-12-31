@@ -183,6 +183,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Update tag to latest commit to ensure source code archives are up-to-date
+          git tag -f x86_64
+          git push origin x86_64 --force
+
           if ! gh release view x86_64 >/dev/null 2>&1; then
             gh release create x86_64 --title "Arch Linux Repository (x86_64)" --notes "Arch Linux AUR Repository"
           fi
