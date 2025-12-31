@@ -75,21 +75,22 @@ jobs:
 
       # [NEW] Clean up Orphaned Packages (Deleted from local)
       - name: Clean up Orphaned Packages
+        id: orphan_cleanup
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Checking for orphaned packages..."
-          
+
           # 1. Get list of valid local package directories
           find . -maxdepth 2 -name PKGBUILD -printf '%h\n' | sed 's|./||' | sort > local_pkgs.txt
-          
+
           # 2. Get list of remote assets from GitHub Release
           # If release doesn't exist yet, ignore error
           gh release view x86_64 --json assets -q '.assets[].name' | grep '\.pkg\.tar\.zst$' | sort > remote_assets.txt || touch remote_assets.txt
-          
+
           # 3. Identify orphans
           touch pkgs_to_remove.txt
-          
+
           while read -r asset; do
             # Extract pkgname from filename (heuristic: name-ver-rel-arch.pkg.tar.zst)
             # Remove extension
@@ -97,23 +98,26 @@ jobs:
             # Remove last 3 parts (arch, rel, ver) separated by hyphens
             # e.g. octopi-0.18.1-1-x86_64 -> octopi
             pkgname=$(echo "$basename" | rev | cut -d- -f4- | rev)
-            
+
             # Check if this pkgname exists in local_pkgs.txt
             if ! grep -Fxq "$pkgname" local_pkgs.txt; then
               echo ":: Orphan detected: $pkgname (File: $asset)"
-              
+
               # Delete asset from GitHub immediately
               gh release delete-asset x86_64 "$asset" -y
-              
+
               # Add pkgname to removal list for DB update
               echo "$pkgname" >> pkgs_to_remove.txt
             fi
           done < remote_assets.txt
-          
+
           # Move removal list to release_dist so Docker can see it
-          if [ -f pkgs_to_remove.txt ]; then
+          if [ -f pkgs_to_remove.txt ] && [ -s pkgs_to_remove.txt ]; then
              mkdir -p release_dist
              mv pkgs_to_remove.txt release_dist/
+             echo "ORPHANS_REMOVED=true" >> "$GITHUB_OUTPUT"
+          else
+             echo "ORPHANS_REMOVED=false" >> "$GITHUB_OUTPUT"
           fi
 
       # [NEW] Remove Orphaned Packages from Database
@@ -175,13 +179,13 @@ jobs:
           fi
 
       - name: Upload Packages
-        if: steps.check.outputs.BUILD_REQUIRED == 'true'
+        if: steps.check.outputs.BUILD_REQUIRED == 'true' || steps.orphan_cleanup.outputs.ORPHANS_REMOVED == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if ! gh release view x86_64 >/dev/null 2>&1; then
             gh release create x86_64 --title "Arch Linux Repository (x86_64)" --notes "Arch Linux AUR Repository"
           fi
-          
+
           echo "Uploading assets..."
           gh release upload x86_64 release_dist/* --clobber
