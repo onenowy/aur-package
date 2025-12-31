@@ -1,0 +1,20 @@
+pkgbase = lm-studio
+	pkgdesc = Discover, download, and run local LLMs
+	pkgver = 0.3.36.1
+	pkgrel = 1
+	url = https://lmstudio.ai/
+	arch = x86_64
+	license = LicenseRef-EULA
+	makedepends = squashfs-tools
+	makedepends = graphicsmagick
+	depends = zlib
+	depends = hicolor-icon-theme
+	depends = fuse2
+	depends = clblast
+	noextract = lm-studio-0.3.36.1.AppImage
+	options = !strip
+	options = !debug
+	source = lm-studio-0.3.36.1.AppImage::https://installers.lmstudio.ai/linux/x64/0.3.36-1/LM-Studio-0.3.36-1-x64.AppImage
+	sha256sums = 102bb6cf683721ff7e2443fba43d85775993564d4a9ba3702a7ba4c92de77e1c
+
+pkgname = lm-studio
