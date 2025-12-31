@@ -112,6 +112,7 @@ jobs:
           
           # Move removal list to release_dist so Docker can see it
           if [ -f pkgs_to_remove.txt ]; then
+             mkdir -p release_dist
              mv pkgs_to_remove.txt release_dist/
           fi
 
