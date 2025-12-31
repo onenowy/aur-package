@@ -4,7 +4,6 @@
 
 pkgname=lm-studio
 pkgver=0.3.35.1
-_pkgver="${pkgver%.*}-${pkgver##*.}"
 pkgrel=1
 pkgdesc="Discover, download, and run local LLMs"
 arch=('x86_64')
@@ -13,17 +12,21 @@ license=('LicenseRef-EULA')
 depends=('zlib' 'hicolor-icon-theme' 'fuse2' 'clblast')
 makedepends=('squashfs-tools' 'graphicsmagick')
 options=(!strip !debug)
-_appimage="${pkgname}-${pkgver}.AppImage"
-source=("${_appimage}::https://installers.lmstudio.ai/linux/x64/${_pkgver}/LM-Studio-${_pkgver}-x64.AppImage")
+
+_basever="${pkgver%.*}"
+_build="${pkgver##*.}"
+_filename="LM-Studio-${_basever}-${_build}-x64.AppImage"
+
+source=("${pkgname}-${pkgver}.AppImage::https://installers.lmstudio.ai/linux/x64/${_basever}-${_build}/${_filename}")
 sha256sums=('ad9bf98e91ff13b5eea1d26f1457c8d7c4bed24bbb419551d5cbff4840380953')
-noextract=("${_appimage}")
+noextract=("${pkgname}-${pkgver}.AppImage")
 
 prepare() {
   rm -rf squashfs-root
-  chmod +x "${_appimage}"
-  offset=$(./"${_appimage}" --appimage-offset)
+  chmod +x "${pkgname}-${pkgver}.AppImage"
+  offset=$(./"${pkgname}-${pkgver}.AppImage" --appimage-offset)
   unset PAGER
-  unsquashfs -q -o "$offset" -d squashfs-root "${_appimage}" \
+  unsquashfs -q -o "$offset" -d squashfs-root "${pkgname}-${pkgver}.AppImage" \
     "${pkgname}.desktop" \
     "usr/share/icons/hicolor/0x0/apps/lm-studio.png" \
     "LICENSE.electron.txt" \
@@ -38,7 +41,7 @@ build() {
 }
 
 package() {
-  install -Dm755 "${srcdir}/${_appimage}" "${pkgdir}/opt/${pkgname}/${pkgname}.AppImage"
+  install -Dm755 "${srcdir}/${pkgname}-${pkgver}.AppImage" "${pkgdir}/opt/${pkgname}/${pkgname}.AppImage"
   install -Dm644 "${srcdir}/squashfs-root/LICENSE"* -t "${pkgdir}/usr/share/licenses/${pkgname}"
   install -Dm644 /dev/stdin "$pkgdir/usr/share/licenses/$pkgname/EULA" <<< "https://lmstudio.ai/app-terms"
 

@@ -36,6 +36,5 @@ prefix = "v"
 # prefix = "v"
 
 [lm-studio]
-source = "regex"
-url = "https://lmstudio.ai/download"
-regex = '\\"linux\\":\{\\"x64\\":\{\\"version\\":\\"([\d\.]+)\\"'
+source = "cmd"
+cmd = "curl -sIL -o /dev/null -w '%{url_effective}\\n' https://lmstudio.ai/download/latest/linux/x64 | sed -E 's|.*x64/([0-9]+\\.[0-9]+\\.[0-9]+)-([0-9]+).*|\\1.\\2|'"
