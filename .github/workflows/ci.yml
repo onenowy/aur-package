@@ -75,7 +75,6 @@ jobs:
 
       # [NEW] Clean up Orphaned Packages (Deleted from local)
       - name: Clean up Orphaned Packages
-        if: steps.check.outputs.BUILD_REQUIRED == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -116,15 +115,14 @@ jobs:
              mv pkgs_to_remove.txt release_dist/
           fi
 
-      # [Modified] Create/Update Repository Database (Handle removals)
-      - name: Create Repository Database
-        if: steps.check.outputs.BUILD_REQUIRED == 'true'
+      # [NEW] Remove Orphaned Packages from Database
+      - name: Remove Orphaned Packages from Database
+        if: hashFiles('release_dist/pkgs_to_remove.txt') != ''
         run: |
           docker run --rm -v $PWD/release_dist:/repo archlinux:base-devel /bin/bash -c "
             cd /repo
-            
-            # 1. Remove orphaned packages from DB if list exists
-            if [ -f pkgs_to_remove.txt ]; then
+
+            if [ -s pkgs_to_remove.txt ]; then
               echo 'Removing orphaned packages from DB...'
               # Read file into array and remove duplicates
               mapfile -t to_remove < <(sort -u pkgs_to_remove.txt)
@@ -134,8 +132,16 @@ jobs:
               fi
               rm pkgs_to_remove.txt
             fi
-            
-            # 2. Add new packages to DB
+          "
+
+      # [Modified] Create/Update Repository Database
+      - name: Create Repository Database
+        if: steps.check.outputs.BUILD_REQUIRED == 'true'
+        run: |
+          docker run --rm -v $PWD/release_dist:/repo archlinux:base-devel /bin/bash -c "
+            cd /repo
+
+            # Add new packages to DB
             shopt -s nullglob
             files=(*.pkg.tar.zst)
             if [ \${#files[@]} -gt 0 ]; then
