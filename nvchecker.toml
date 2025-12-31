@@ -34,3 +34,8 @@ prefix = "v"
 # gitlab = "applications/udev-usb-sync"
 # use_latest_release = true
 # prefix = "v"
+
+[lm-studio]
+source = "regex"
+url = "https://lmstudio.ai/download"
+regex = '\\"linux\\":\{\\"x64\\":\{\\"version\\":\\"([\d\.]+)\\"'
