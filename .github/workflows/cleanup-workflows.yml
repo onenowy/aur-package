@@ -6,7 +6,7 @@ on:
 
 permissions:
   actions: write
-
+  contents: read
 jobs:
   delete-runs:
     runs-on: ubuntu-latest
