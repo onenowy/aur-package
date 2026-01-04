@@ -1,7 +1,7 @@
 {
   "defaultKeep": 5,
   "workflows": {
-    "Arch Package CI/CD": 23,
+    "Arch Package CI/CD": 10,
     "Periodic Cleanup": 2
   }
 }
