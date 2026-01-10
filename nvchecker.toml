@@ -11,10 +11,8 @@ use_latest_release = true
 prefix = "v"
 
 [visual-studio-code]
-source = "github"
-github = "microsoft/vscode"
-use_latest_release = true
-prefix = "v"
+source = "cmd"
+cmd = "curl -s 'https://update.code.visualstudio.com/api/update/linux-x64/stable/latest' | jq -r '.productVersion'"
 
 [qt-sudo]
 source = "github"
