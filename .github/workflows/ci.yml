@@ -62,17 +62,6 @@ jobs:
           commit_message: "update: packages updated"
           file_pattern: '*/PKGBUILD */.SRCINFO'
 
-      # [Modified] Download existing DB
-      - name: Fetch existing repository database
-        if: steps.check.outputs.BUILD_REQUIRED == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir -p release_dist
-          echo "Fetching existing database..."
-          gh release download x86_64 -p "shelter-arch-aur.db.tar.gz" -D release_dist || true
-          gh release download x86_64 -p "shelter-arch-aur.files.tar.gz" -D release_dist || true
-
       # [NEW] Clean up Orphaned Packages (Deleted from local)
       - name: Clean up Orphaned Packages
         id: orphan_cleanup
@@ -119,6 +108,17 @@ jobs:
           else
              echo "ORPHANS_REMOVED=false" >> "$GITHUB_OUTPUT"
           fi
+
+      # Download existing DB (only when needed for builds or orphan cleanup)
+      - name: Fetch existing repository database
+        if: steps.check.outputs.BUILD_REQUIRED == 'true' || steps.orphan_cleanup.outputs.ORPHANS_REMOVED == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p release_dist
+          echo "Fetching existing database..."
+          gh release download x86_64 -p "shelter-arch-aur.db.tar.gz" -D release_dist || true
+          gh release download x86_64 -p "shelter-arch-aur.files.tar.gz" -D release_dist || true
 
       # [NEW] Remove Orphaned Packages from Database
       - name: Remove Orphaned Packages from Database
@@ -191,5 +191,12 @@ jobs:
             gh release create x86_64 --title "Arch Linux Repository (x86_64)" --notes "Arch Linux AUR Repository"
           fi
 
-          echo "Uploading assets..."
-          gh release upload x86_64 release_dist/* --clobber
+          # Only upload if there are files to upload
+          shopt -s nullglob
+          files=(release_dist/*)
+          if [ ${#files[@]} -gt 0 ]; then
+            echo "Uploading assets..."
+            gh release upload x86_64 release_dist/* --clobber
+          else
+            echo "No files to upload."
+          fi
