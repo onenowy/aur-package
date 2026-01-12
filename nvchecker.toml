@@ -26,13 +26,6 @@ github = "aarnt/octopi"
 use_latest_release = true
 prefix = "v"
 
-# [udev-usb-sync]
-# source = "gitlab"
-# host = "gitlab.manjaro.org"
-# gitlab = "applications/udev-usb-sync"
-# use_latest_release = true
-# prefix = "v"
-
 # [lm-studio]
 # source = "cmd"
 # cmd = "curl -sIL -o /dev/null -w '%{url_effective}\\n' https://lmstudio.ai/download/latest/linux/x64 | sed -E 's|.*x64/([0-9]+\\.[0-9]+\\.[0-9]+)-([0-9]+).*|\\1.\\2|'"
