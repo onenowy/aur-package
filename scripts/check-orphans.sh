@@ -6,8 +6,8 @@ set -e
 
 echo "Checking for orphaned packages..."
 
-# 1. Get list of valid local package directories
-find . -maxdepth 2 -name PKGBUILD -printf '%h\n' | sed 's|./||' | sort -u > local_pkgs.txt
+# 1. Get list of valid local package directories (exclude scripts folder)
+find . -maxdepth 2 -name PKGBUILD -not -path './scripts/*' -printf '%h\n' | sed 's|./||' | sort -u > local_pkgs.txt
 
 # 2. Get list of remote .zst assets from GitHub Release
 gh release view x86_64 --json assets -q '.assets[].name' | grep '\.pkg\.tar\.zst$' | sort > remote_assets.txt || touch remote_assets.txt

@@ -33,7 +33,7 @@ jobs:
             ./scripts/update-version.sh
           else
             echo "Manual build mode: Building ALL packages found."
-            ALL_PKGS=$(find . -maxdepth 2 -name PKGBUILD -printf '%h\n' | sed 's|./||' | jq -R . | jq -s -c .)
+            ALL_PKGS=$(find . -maxdepth 2 -name PKGBUILD -not -path './scripts/*' -printf '%h\n' | sed 's|./||' | jq -R . | jq -s -c .)
             
             echo "Detected packages: $ALL_PKGS"
             echo "BUILD_REQUIRED=true" >> "$GITHUB_OUTPUT"
