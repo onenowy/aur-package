@@ -4,7 +4,7 @@
 
 set -e
 
-echo "Checking for orphaned packages..."
+echo "Checking for orphaned packages..." >&2
 
 # 1. Get list of valid local package directories (exclude scripts folder)
 find . -maxdepth 2 -name PKGBUILD -not -path './scripts/*' -printf '%h\n' | sed 's|./||' | sort -u > local_pkgs.txt
@@ -38,8 +38,8 @@ while read -r asset; do
   pkgname=$(echo "$basename" | rev | cut -d- -f4- | rev)
 
   if ! grep -Fxq "$pkgname" local_pkgs.txt; then
-    echo ":: Orphan detected (zst): $pkgname (File: $asset)"
-    gh release delete-asset x86_64 "$asset" -y
+    echo ":: Orphan detected (zst): $pkgname (File: $asset)" >&2
+    gh release delete-asset x86_64 "$asset" -y >&2
     echo "$pkgname" >> pkgs_to_remove.txt
   fi
 done < remote_assets.txt
@@ -49,13 +49,13 @@ while read -r pkgname; do
   [ -z "$pkgname" ] && continue
   if ! grep -Fxq "$pkgname" local_pkgs.txt; then
     if ! grep -Fxq "$pkgname" pkgs_to_remove.txt; then
-      echo ":: Orphan detected (DB only): $pkgname"
+      echo ":: Orphan detected (DB only): $pkgname" >&2
       echo "$pkgname" >> pkgs_to_remove.txt
     fi
   fi
 done < db_pkgs.txt
 
-# 6. Output result
+# 6. Output result (only this goes to stdout for GITHUB_OUTPUT)
 if [ -s pkgs_to_remove.txt ]; then
   mv pkgs_to_remove.txt release_dist/
   echo "ORPHANS_REMOVED=true"
