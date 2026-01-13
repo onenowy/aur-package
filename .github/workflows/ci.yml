@@ -62,50 +62,16 @@ jobs:
           commit_message: "update: packages updated"
           file_pattern: '*/PKGBUILD */.SRCINFO'
 
-      - name: Check Orphaned Packages
-        id: orphan_cleanup
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          chmod +x ./scripts/check-orphans.sh
-          ./scripts/check-orphans.sh >> "$GITHUB_OUTPUT"
-
-      # Download existing DB (only when BUILD_REQUIRED and not already downloaded by orphan cleanup)
       - name: Fetch existing repository database
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p release_dist
-          # Skip if already downloaded by orphan cleanup
-          if [ ! -f release_dist/shelter-arch-aur.db.tar.gz ]; then
-            echo "Fetching existing database..."
-            gh release download x86_64 -p "shelter-arch-aur.db.tar.gz" -D release_dist || true
-            gh release download x86_64 -p "shelter-arch-aur.files.tar.gz" -D release_dist || true
-          else
-            echo "Database already downloaded."
-          fi
+          echo "Fetching existing database..."
+          gh release download x86_64 -p "shelter-arch-aur.db.tar.gz" -D release_dist || true
+          gh release download x86_64 -p "shelter-arch-aur.files.tar.gz" -D release_dist || true
 
-      # [NEW] Remove Orphaned Packages from Database
-      - name: Remove Orphaned Packages from Database
-        if: hashFiles('release_dist/pkgs_to_remove.txt') != ''
-        run: |
-          docker run --rm -v $PWD/release_dist:/repo archlinux:base-devel /bin/bash -c "
-            cd /repo
-
-            if [ -s pkgs_to_remove.txt ]; then
-              echo 'Removing orphaned packages from DB...'
-              # Read file into array and remove duplicates
-              mapfile -t to_remove < <(sort -u pkgs_to_remove.txt)
-              if [ \${#to_remove[@]} -gt 0 ]; then
-                 # Run repo-remove (ignore error if pkg not in DB)
-                 repo-remove shelter-arch-aur.db.tar.gz \"\${to_remove[@]}\" || true
-              fi
-              rm pkgs_to_remove.txt
-            fi
-          "
-
-      # [Modified] Create/Update Repository Database
       - name: Create Repository Database
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         run: |
@@ -145,7 +111,7 @@ jobs:
           fi
 
       - name: Upload Packages
-        if: steps.check.outputs.BUILD_REQUIRED == 'true' || steps.orphan_cleanup.outputs.ORPHANS_REMOVED == 'true'
+        if: steps.check.outputs.BUILD_REQUIRED == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

@@ -1,0 +1,51 @@
+name: Check Orphaned Packages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check-orphans:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Orphaned Packages
+        id: orphan_cleanup
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          chmod +x ./scripts/check-orphans.sh
+          ./scripts/check-orphans.sh >> "$GITHUB_OUTPUT"
+
+      - name: Remove Orphaned Packages from Database
+        if: steps.orphan_cleanup.outputs.ORPHANS_REMOVED == 'true'
+        run: |
+          docker run --rm -v $PWD/release_dist:/repo archlinux:base-devel /bin/bash -c "
+            cd /repo
+
+            if [ -s pkgs_to_remove.txt ]; then
+              echo 'Removing orphaned packages from DB...'
+              mapfile -t to_remove < <(sort -u pkgs_to_remove.txt)
+              if [ \${#to_remove[@]} -gt 0 ]; then
+                repo-remove shelter-arch-aur.db.tar.gz \"\${to_remove[@]}\" || true
+              fi
+              rm pkgs_to_remove.txt
+            fi
+          "
+
+      - name: Upload Updated Database
+        if: steps.orphan_cleanup.outputs.ORPHANS_REMOVED == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          shopt -s nullglob
+          files=(release_dist/*)
+          if [ ${#files[@]} -gt 0 ]; then
+            echo "Uploading updated database..."
+            gh release upload x86_64 release_dist/* --clobber
+          else
+            echo "No files to upload."
+          fi
