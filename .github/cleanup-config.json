@@ -2,6 +2,7 @@
   "defaultKeep": 5,
   "workflows": {
     "Arch Package CI/CD": 10,
-    "Periodic Cleanup": 2
+    "Periodic Cleanup": 2,
+    "Check Orphaned Packages": 1
   }
 }
