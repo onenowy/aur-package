@@ -22,9 +22,9 @@ optdepends=('glib2: Needed for move to trash functionality'
             'org.freedesktop.secrets: Needed for settings sync'
              # See https://github.com/MicrosoftDocs/live-share/issues/4650
             'icu69: Needed for live share' )
-source=(code-${pkgver}.desktop.in::https://raw.githubusercontent.com/microsoft/vscode/${pkgver}/resources/linux/code.desktop
-        code-${pkgver}-url-handler.desktop.in::https://raw.githubusercontent.com/microsoft/vscode/${pkgver}/resources/linux/code-url-handler.desktop
-        code-${pkgver}-workspace.xml.in::https://raw.githubusercontent.com/microsoft/vscode/${pkgver}/resources/linux/code-workspace.xml
+source=(code-${pkgver}.desktop.in::https://raw.githubusercontent.com/microsoft/vscode/refs/heads/main/resources/linux/code.desktop
+        code-${pkgver}-url-handler.desktop.in::https://raw.githubusercontent.com/microsoft/vscode/refs/heads/main/resources/linux/code-url-handler.desktop
+        code-${pkgver}-workspace.xml.in::https://raw.githubusercontent.com/microsoft/vscode/refs/heads/main/resources/linux/code-workspace.xml
         ${_pkgname}-bin.sh)
 source_x86_64=(code_x64_${pkgver}.tar.gz::https://update.code.visualstudio.com/${pkgver}/linux-x64/stable)
 
