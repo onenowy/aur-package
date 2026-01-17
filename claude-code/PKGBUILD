@@ -1,7 +1,7 @@
 # Maintainer: Christopher Cooper <christopher@cg505.com>
 # Maintainer: Jérôme Poulin <jeromepoulin@gmail.com>
 pkgname=claude-code
-pkgver=2.1.9
+pkgver=2.1.11
 pkgrel=1
 pkgdesc="An agentic coding tool that lives in your terminal"
 arch=('x86_64')
@@ -23,7 +23,7 @@ _gcs_bucket="https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-
 source=("LICENSE::https://raw.githubusercontent.com/anthropics/claude-code/refs/heads/main/LICENSE.md"
         "claude-${pkgver}::${_gcs_bucket}/${pkgver}/linux-x64/claude")
 sha256sums=('728158fd1037143fad6907e8fa34804177e598b7326519503fe83cafdef849e6'
-            '8e3da4e5c904191eb97013706f33a4199562dd06360d950676a62c87e9fbd0d0')
+            '9d79cc613d5feff19c82330601bcc53d41cd03c42431110d74bc3253fefee263')
 
 package() {
 	install -Dm755 "${srcdir}/claude-${pkgver}" "${pkgdir}/opt/claude-code/bin/claude"
