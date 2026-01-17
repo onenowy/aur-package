@@ -1,6 +1,6 @@
 pkgbase = claude-code
 	pkgdesc = An agentic coding tool that lives in your terminal
-	pkgver = 2.1.11
+	pkgver = 2.1.12
 	pkgrel = 1
 	url = https://github.com/anthropics/claude-code
 	arch = x86_64
@@ -12,8 +12,8 @@ pkgbase = claude-code
 	optdepends = ripgrep: enhanced file search
 	options = !strip
 	source = LICENSE::https://raw.githubusercontent.com/anthropics/claude-code/refs/heads/main/LICENSE.md
-	source = claude-2.1.11::https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.11/linux-x64/claude
+	source = claude-2.1.12::https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/2.1.12/linux-x64/claude
 	sha256sums = 728158fd1037143fad6907e8fa34804177e598b7326519503fe83cafdef849e6
-	sha256sums = 9d79cc613d5feff19c82330601bcc53d41cd03c42431110d74bc3253fefee263
+	sha256sums = 3fe979215489dc1b31463fadf95ed2d2d5473a9969447bb7a46431f4578847d4
 
 pkgname = claude-code
