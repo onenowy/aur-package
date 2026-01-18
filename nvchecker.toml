@@ -26,10 +26,10 @@ github = "aarnt/octopi"
 use_latest_release = true
 prefix = "v"
 
-[claude-code]
-source = "regex"
-url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/latest"
-regex = ".+"
+# [claude-code]
+# source = "regex"
+# url = "https://storage.googleapis.com/claude-code-dist-86c565f3-f756-42ad-8dfa-d59b1c096819/claude-code-releases/latest"
+# regex = ".+"
 
 # [lm-studio]
 # source = "cmd"
