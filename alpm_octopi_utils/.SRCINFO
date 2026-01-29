@@ -3,7 +3,6 @@ pkgbase = alpm_octopi_utils
 	pkgver = 1.0.2
 	pkgrel = 1
 	url = https://octopiproject.wordpress.com/
-	arch = i686
 	arch = x86_64
 	license = GPL3
 	makedepends = vala
