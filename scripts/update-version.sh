@@ -35,32 +35,29 @@ nvchecker -c nvchecker.toml --logger json > nvchecker.log 2>&1 || true
 # 2. Get currently released packages from Repo Database
 echo "Fetching repository database..."
 mkdir -p db_tmp
-touch db_versions.txt
+: > db_versions.txt # Create/Clear file
 
 if command -v gh >/dev/null; then
     # Download DB to get registered versions (including epoch)
-    # We suppress output to avoid clutter
-    # Try downloading the DB archive
     if gh release download x86_64 -p "shelter-arch-aur.db.tar.gz" -D db_tmp >/dev/null 2>&1; then
         echo "Database downloaded. Extracting..."
         tar -xf db_tmp/shelter-arch-aur.db.tar.gz -C db_tmp
         
         # Parse desc files for versions
-        # Structure: db_tmp/pkgname-ver-rel/desc
-        # Content contains:
-        # %NAME%
-        # pkgname
-        # %VERSION%
-        # epoch:ver-rel
-        
-        # Find all desc files and parse them into a key-value list (pkgname version)
         find db_tmp -name "desc" | while read -r desc_file; do
              awk '
-                /%NAME%/ { getline; name=$0 }
-                /%VERSION%/ { getline; version=$0 }
+                /%NAME%/ { getline; sub(/\r$/, ""); name=$0 }
+                /%VERSION%/ { getline; sub(/\r$/, ""); version=$0 }
                 END { if(name && version) print name " " version }
              ' "$desc_file" >> db_versions.txt
         done
+        
+        entry_count=$(wc -l < db_versions.txt)
+        echo "Parsed $entry_count packages from repository database."
+        if [ "$entry_count" -eq 0 ]; then
+             echo "Warning: Database extracted but no packages found (check db_tmp content)."
+             ls -R db_tmp | head -n 20
+        fi
     else
         echo "Warning: Could not download repository database (might not exist yet)."
     fi
@@ -114,8 +111,8 @@ for pkgbuild_path in */PKGBUILD; do
         local_full_ver="${pkgver}-${pkgrel}"
     fi
 
-    # Get DB version from our parsed list
-    db_full_ver=$(grep "^$pkgname " db_versions.txt | cut -d' ' -f2 || echo "")
+    # Get DB version using awk for exact match
+    db_full_ver=$(awk -v pkg="$pkgname" '$1 == pkg {print $2; exit}' db_versions.txt)
 
     if [ -z "$db_full_ver" ]; then
         echo "[$pkgname] Not in database. Marking for build."
