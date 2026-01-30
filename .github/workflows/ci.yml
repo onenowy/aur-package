@@ -92,8 +92,11 @@ jobs:
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         run: |
           cd release_dist
-          cp -f shelter-arch-aur.db.tar.gz shelter-arch-aur.db
-          cp -f shelter-arch-aur.files.tar.gz shelter-arch-aur.files
+          # repo-add creates symlinks (e.g., .db -> .db.tar.gz). 
+          # GitHub Release assets don't support symlinks, so we convert them to regular files.
+          rm -f shelter-arch-aur.db shelter-arch-aur.files
+          cp shelter-arch-aur.db.tar.gz shelter-arch-aur.db
+          cp shelter-arch-aur.files.tar.gz shelter-arch-aur.files
 
       # [Maintained] Remove Old Versions of Updated Packages
       - name: Remove Old Versions
