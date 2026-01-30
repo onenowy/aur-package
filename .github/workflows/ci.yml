@@ -42,10 +42,6 @@ jobs:
             echo "BUILD_PACKAGES=$ALL_PKGS" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Make Scripts Executable
-        if: steps.check.outputs.BUILD_REQUIRED == 'true'
-        run: chmod +x ./scripts/build_script.sh
-
       - name: Build Packages
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         id: build_step
@@ -55,7 +51,8 @@ jobs:
         with:
           args: /bin/bash /github/workspace/scripts/build_script.sh
 
-      - if: steps.check.outputs.BUILD_REQUIRED == 'true'
+      - name: Fix Permissions
+        if: steps.check.outputs.BUILD_REQUIRED == 'true'
         run: sudo chown -R $USER:$USER .
 
       - name: Commit Changes
