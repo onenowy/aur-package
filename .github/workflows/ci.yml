@@ -48,6 +48,7 @@ jobs:
 
       - name: Build Packages
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
+        id: build_step
         uses: docker://archlinux:base-devel
         env:
           PACKAGES: ${{ steps.check.outputs.BUILD_PACKAGES }}
@@ -103,12 +104,13 @@ jobs:
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPDATED_PKGNAMES: ${{ steps.build_step.outputs.UPDATED_PKGNAMES }}
         run: |
-          if [ -f release_dist/updated_pkgnames.txt ]; then
+          if [ -n "$UPDATED_PKGNAMES" ]; then
             echo "Identifying old assets to remove..."
             gh release view x86_64 --json assets -q '.assets[].name' > current_assets.txt || touch current_assets.txt
             
-            while read -r pkgname; do
+            for pkgname in $UPDATED_PKGNAMES; do
               echo ":: Processing cleanup for: $pkgname"
               new_files=$(ls release_dist/${pkgname}-[0-9]*.pkg.tar.zst | xargs -n1 basename)
               
@@ -118,7 +120,7 @@ jobs:
                    gh release delete-asset x86_64 "$asset" -y
                 fi
               done
-            done < release_dist/updated_pkgnames.txt
+            done
           fi
 
       - name: Upload Packages

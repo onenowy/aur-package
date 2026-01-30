@@ -112,6 +112,8 @@ fi
 # ==============================================================================
 # 4. Build Loop
 # ==============================================================================
+BUILT_PKGS=()
+
 for pkg_dir in "${BUILD_QUEUE[@]}"; do
   echo "--------------------------------------"
   echo "Building package: $pkg_dir"
@@ -155,8 +157,8 @@ for pkg_dir in "${BUILD_QUEUE[@]}"; do
           echo ":: Skipping local installation for $current_pkgname (Not listed as a dependency in JSON)."
       fi
 
-      # Record the package name for cleanup logic in CI
-      echo "$current_pkgname" >> ../release_dist/updated_pkgnames.txt
+      # Add to list of built packages
+      BUILT_PKGS+=("$current_pkgname")
       
       # Move artifacts to release directory
       mv "${pkg_files[@]}" ../release_dist/
@@ -167,3 +169,8 @@ for pkg_dir in "${BUILD_QUEUE[@]}"; do
   
   cd /github/workspace
 done
+
+# Output list of built packages to GitHub Actions output
+if [ -n "$GITHUB_OUTPUT" ]; then
+    echo "UPDATED_PKGNAMES=${BUILT_PKGS[*]}" >> "$GITHUB_OUTPUT"
+fi
