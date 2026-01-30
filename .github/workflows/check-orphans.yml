@@ -35,7 +35,13 @@ jobs:
               rm pkgs_to_remove.txt
             fi
           "
-
+      - name: Prepare Database Files for Upload
+        if: steps.orphan_cleanup.outputs.ORPHANS_REMOVED == 'true'
+        run: |
+          cd release_dist
+          cp -f shelter-arch-aur.db.tar.gz shelter-arch-aur.db
+          cp -f shelter-arch-aur.files.tar.gz shelter-arch-aur.files
+          
       - name: Upload Updated Database
         if: steps.orphan_cleanup.outputs.ORPHANS_REMOVED == 'true'
         env:

@@ -86,6 +86,12 @@ jobs:
               repo-add -n shelter-arch-aur.db.tar.gz \"\${files[@]}\"
             fi
           "
+      - name: Prepare Database Files for Upload
+        if: steps.check.outputs.BUILD_REQUIRED == 'true'
+        run: |
+          cd release_dist
+          cp -f shelter-arch-aur.db.tar.gz shelter-arch-aur.db
+          cp -f shelter-arch-aur.files.tar.gz shelter-arch-aur.files
 
       # [Maintained] Remove Old Versions of Updated Packages
       - name: Remove Old Versions
