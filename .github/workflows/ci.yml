@@ -26,6 +26,8 @@ jobs:
 
       - name: Check for Updates
         id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           chmod +x ./scripts/update-version.sh
 
