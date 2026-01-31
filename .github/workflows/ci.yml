@@ -62,23 +62,20 @@ jobs:
           commit_message: "update: packages updated"
           file_pattern: '*/PKGBUILD */.SRCINFO'
 
-      - name: Fetch existing repository database
+      - name: Manage Repository Database
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # 1. Fetch existing database
           mkdir -p release_dist
           echo "Fetching existing database..."
           gh release download x86_64 -p "shelter-arch-aur.db.tar.gz" -D release_dist || true
           gh release download x86_64 -p "shelter-arch-aur.files.tar.gz" -D release_dist || true
 
-      - name: Create Repository Database
-        if: steps.check.outputs.BUILD_REQUIRED == 'true'
-        run: |
+          # 2. Add new packages to DB (using Docker for repo-add)
           docker run --rm -v $PWD/release_dist:/repo archlinux:base-devel /bin/bash -c "
             cd /repo
-
-            # Add new packages to DB
             shopt -s nullglob
             files=(*.pkg.tar.zst)
             if [ \${#files[@]} -gt 0 ]; then
@@ -86,12 +83,10 @@ jobs:
               repo-add -n shelter-arch-aur.db.tar.gz \"\${files[@]}\"
             fi
           "
-      - name: Prepare Database Files for Upload
-        if: steps.check.outputs.BUILD_REQUIRED == 'true'
-        run: |
+
+          # 3. Prepare files for upload
+          # Convert symlinks to regular files
           cd release_dist
-          # repo-add creates symlinks (e.g., .db -> .db.tar.gz). 
-          # GitHub Release assets don't support symlinks, so we convert them to regular files.
           rm -f shelter-arch-aur.db shelter-arch-aur.files
           cp shelter-arch-aur.db.tar.gz shelter-arch-aur.db
           cp shelter-arch-aur.files.tar.gz shelter-arch-aur.files
@@ -103,22 +98,20 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           UPDATED_PKGNAMES: ${{ steps.build_step.outputs.UPDATED_PKGNAMES }}
         run: |
-          if [ -n "$UPDATED_PKGNAMES" ]; then
-            echo "Identifying old assets to remove..."
-            gh release view x86_64 --json assets -q '.assets[].name' > current_assets.txt || touch current_assets.txt
+          echo "Identifying old assets to remove..."
+          gh release view x86_64 --json assets -q '.assets[].name' > current_assets.txt || touch current_assets.txt
+          
+          for pkgname in $UPDATED_PKGNAMES; do
+            echo ":: Processing cleanup for: $pkgname"
+            new_files=$(ls release_dist/${pkgname}-[0-9]*.pkg.tar.zst | xargs -n1 basename)
             
-            for pkgname in $UPDATED_PKGNAMES; do
-              echo ":: Processing cleanup for: $pkgname"
-              new_files=$(ls release_dist/${pkgname}-[0-9]*.pkg.tar.zst | xargs -n1 basename)
-              
-              grep "^${pkgname}-[0-9]" current_assets.txt | while read -r asset; do
-                if [[ "$new_files" != *"$asset"* ]]; then
-                   echo "   Deleting old version: $asset"
-                   gh release delete-asset x86_64 "$asset" -y
-                fi
-              done
+            grep "^${pkgname}-[0-9]" current_assets.txt | while read -r asset; do
+              if [[ "$new_files" != *"$asset"* ]]; then
+                 echo "   Deleting old version: $asset"
+                 gh release delete-asset x86_64 "$asset" -y
+              fi
             done
-          fi
+          done
 
       - name: Upload Packages
         if: steps.check.outputs.BUILD_REQUIRED == 'true'

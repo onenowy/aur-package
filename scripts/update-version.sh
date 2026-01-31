@@ -43,11 +43,12 @@ check_package() {
     if [ -z "$pkgname" ]; then return; fi
     
     # --- Check 1: Upstream vs PKGBUILD ---
-    local upstream_ver=$(grep "\"name\": \"$pkgname\"" nvchecker.log | jq -r .version || echo "")
+    # Extract version from nvchecker log (handle multiple lines/events, take last non-null)
+    local upstream_ver=$(grep "\"name\": \"$pkgname\"" nvchecker.log | jq -r .version | grep -v "null" | tail -n1 || echo "")
 
-    if [ -n "$upstream_ver" ] && [ "$upstream_ver" != "null" ]; then
+    if [ -n "$upstream_ver" ]; then
         if ver_gt "$upstream_ver" "$pkgver"; then
-            echo "[$pkgname] Upstream update detected: $pkgver -> $upstream_ver"
+            echo "[$pkgname] Upstream update detected: $pkgver -> $upstream_ver" >&2
             
             # Update PKGBUILD
             sed -i "s/^pkgver=.*/pkgver=${upstream_ver}/" "$pkgbuild_path"
@@ -58,7 +59,7 @@ check_package() {
             echo "$pkg_dir"
             return
         else
-            echo "[$pkgname] Upstream ($upstream_ver) is not newer than local ($pkgver)."
+            echo "[$pkgname] Upstream ($upstream_ver) is not newer than local ($pkgver)." >&2
         fi
     fi
 
@@ -72,14 +73,14 @@ check_package() {
     local db_full_ver=$(awk -v pkg="$pkgname" '$1 == pkg {print $2; exit}' db_versions.txt)
 
     if [ -z "$db_full_ver" ]; then
-        echo "[$pkgname] Not in database. Marking for build."
+        echo "[$pkgname] Not in database. Marking for build." >&2
         echo "$pkg_dir"
     else
         if ver_gt "$local_full_ver" "$db_full_ver"; then
-            echo "[$pkgname] Local ($local_full_ver) > Repo ($db_full_ver). Marking for build."
+            echo "[$pkgname] Local ($local_full_ver) > Repo ($db_full_ver). Marking for build." >&2
             echo "$pkg_dir"
         else
-            echo "[$pkgname] Up to date with repo ($db_full_ver)."
+            echo "[$pkgname] Up to date with repo ($db_full_ver)." >&2
         fi
     fi
 }
