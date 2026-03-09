@@ -1,7 +1,7 @@
 _pkgname=octopi
 pkgname=octopi
 pkgver=0.18.1
-pkgrel=1
+pkgrel=2
 pkgdesc="This is Octopi, a powerful Pacman frontend using Qt libs (git checkout)"
 url="https://tintaescura.com/projects/octopi/"
 arch=('x86_64')
