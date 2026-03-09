@@ -1,0 +1,40 @@
+name: Rebuild Repository Database
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch Current Assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p release_dist
+          echo "Downloading all package assets from release..."
+          # Download all .pkg.tar.zst files to rebuild the DB from them
+          gh release download x86_64 -p "*.pkg.tar.zst" -D release_dist || echo "No packages found in release."
+
+      - name: Rebuild Database
+        run: |
+          chmod +x ./scripts/manage-db.sh
+          docker run --rm -v $PWD:/repo archlinux:base-devel /bin/bash -c "
+            cd /repo/release_dist
+            # Remove existing DB files to ensure a clean rebuild
+            rm -f shelter-arch-aur.{db,files}*
+            /bin/bash /repo/scripts/manage-db.sh update
+          "
+
+      - name: Upload Rebuilt Database
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Uploading rebuilt database assets..."
+          # Upload everything in release_dist, specifically the DB files
+          gh release upload x86_64 release_dist/shelter-arch-aur.{db,files}* --clobber

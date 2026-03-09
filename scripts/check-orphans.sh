@@ -16,11 +16,10 @@ find . -maxdepth 2 -name PKGBUILD -not -path './scripts/*' | while read -r pkgbu
   pkgname=$(grep "^pkgname=" "$pkgbuild" | cut -d'=' -f2 | tr -d '"' | tr -d "'")
   pkgver=$(grep "^pkgver=" "$pkgbuild" | cut -d'=' -f2 | tr -d '"' | tr -d "'")
   pkgrel=$(grep "^pkgrel=" "$pkgbuild" | cut -d'=' -f2 | tr -d '"' | tr -d "'")
-  # Handle provide/conflict rename cases if needed, but here we focus on current names
   echo "$pkgname $pkgver-$pkgrel" >> local_pkgs_full.txt
 done
 sort -u local_pkgs_full.txt -o local_pkgs_full.txt
-cut -d' ' -f1 local_pkgs_full.txt > local_pkgs_names.txt
+cut -d' ' -f1 local_pkgs_full.txt | sort -u > local_pkgs_names.txt
 
 # 2. Get list of remote .zst assets from GitHub Release
 gh release view x86_64 --json assets -q '.assets[].name' | grep '\.pkg\.tar\.zst$' | sort > remote_assets.txt || touch remote_assets.txt
@@ -46,12 +45,10 @@ while read -r asset; do
   [ -z "$asset" ] && continue
   basename=${asset%.pkg.tar.zst}
   # Extract pkgname and version from filename: pkgname-ver-rel-arch
-  # Arch package naming: name-version-release-arch.pkg.tar.zst
-  # Example: yay-12.1.0-1-x86_64
   pkgname=$(echo "$basename" | rev | cut -d- -f4- | rev)
   pkgver_rel=$(echo "$basename" | rev | cut -d- -f2,3 | rev)
 
-  # Check if it's an orphan
+  # Check if it's an orphan (no local PKGBUILD)
   if ! grep -Fxq "$pkgname" local_pkgs_names.txt; then
     echo ":: Orphan detected (Artifact): $pkgname (File: $asset)" >&2
     gh release delete-asset x86_64 "$asset" -y >&2
@@ -84,7 +81,6 @@ while read -r entry; do
 done < db_pkgs_full.txt
 
 # 6. Output result
-# Remove duplicates from removal list
 if [ -s pkgs_to_remove_from_db.txt ]; then
   sort -u pkgs_to_remove_from_db.txt -o pkgs_to_remove_from_db.txt
   mv pkgs_to_remove_from_db.txt release_dist/pkgs_to_remove.txt

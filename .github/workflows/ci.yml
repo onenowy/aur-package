@@ -73,23 +73,12 @@ jobs:
           gh release download x86_64 -p "shelter-arch-aur.db.tar.gz" -D release_dist || true
           gh release download x86_64 -p "shelter-arch-aur.files.tar.gz" -D release_dist || true
 
-          # 2. Add new packages to DB (using Docker for repo-add)
-          docker run --rm -v $PWD/release_dist:/repo archlinux:base-devel /bin/bash -c "
-            cd /repo
-            shopt -s nullglob
-            files=(*.pkg.tar.zst)
-            if [ \${#files[@]} -gt 0 ]; then
-              echo 'Adding new packages to DB...'
-              repo-add -n shelter-arch-aur.db.tar.gz \"\${files[@]}\"
-            fi
+          # 2. Update Database (using Docker for repo-add tool)
+          chmod +x ./scripts/manage-db.sh
+          docker run --rm -v $PWD:/repo archlinux:base-devel /bin/bash -c "
+            cd /repo/release_dist
+            /bin/bash /repo/scripts/manage-db.sh update
           "
-
-          # 3. Prepare files for upload
-          # Convert symlinks to regular files
-          cd release_dist
-          rm -f shelter-arch-aur.db shelter-arch-aur.files
-          cp shelter-arch-aur.db.tar.gz shelter-arch-aur.db
-          cp shelter-arch-aur.files.tar.gz shelter-arch-aur.files
 
       # [Maintained] Remove Old Versions of Updated Packages
       - name: Remove Old Versions
