@@ -13,6 +13,7 @@ source=("git+https://github.com/aarnt/octopi.git#tag=v${pkgver}")
 md5sums=('4ef88d3a6aa749410f80adc537f25c70')
 
 prepare() {
+   sed 's&usr/local&usr&g' -i "$_pkgname/src/constants.h"
    cd "${_pkgname}"
    cp resources/images/octopi_green.png resources/images/octopi.png
 }
