@@ -39,6 +39,7 @@ jobs:
         if: steps.orphan_cleanup.outputs.ORPHANS_REMOVED == 'true'
         run: |
           cd release_dist
+          rm -f shelter-arch-aur.db shelter-arch-aur.files
           cp -f shelter-arch-aur.db.tar.gz shelter-arch-aur.db
           cp -f shelter-arch-aur.files.tar.gz shelter-arch-aur.files
           
