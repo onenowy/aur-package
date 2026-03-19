@@ -14,9 +14,9 @@ conflicts=('code' 'visual-studio-code-bin')
 # See https://github.com/microsoft/vscode/issues/223455#issuecomment-2610001754
 options=(!strip)
 install=${pkgname}.install
-# lsof: needed for terminal splitting, see https://github.com/Microsoft/vscode/issues/62991
 # xdg-utils: needed for opening web links with xdg-open
-depends=(libxkbfile gnupg gtk3 libsecret nss gcc-libs libnotify libxss glibc lsof shared-mime-info xdg-utils alsa-lib)
+depends=('alsa-lib' 'gnupg' 'gtk3' 'libgbm' 'libnotify' 'libsecret' 'libxkbfile'
+         'libxss' 'libxtst' 'nss' 'shared-mime-info' 'xdg-utils')
 optdepends=('glib2: Needed for move to trash functionality'
             'libdbusmenu-glib: Needed for KDE global menu'
             'org.freedesktop.secrets: Needed for settings sync'
