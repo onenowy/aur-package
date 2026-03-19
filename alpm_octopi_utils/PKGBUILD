@@ -1,11 +1,11 @@
 pkgname=alpm_octopi_utils
 pkgver=1.0.2
-pkgrel=1
+pkgrel=2
 pkgdesc="Alpm utils for Octopi"
 url="https://octopiproject.wordpress.com/"
 arch=('x86_64')
 license=('GPL3')
-depends=('gcc-libs' 'glibc' 'pacman')
+depends=('gcc-libs' 'pacman')
 makedepends=('vala' 'git')
 source=("git+https://github.com/aarnt/alpm_octopi_utils.git")
 md5sums=('SKIP')
