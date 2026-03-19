@@ -10,7 +10,7 @@ jobs:
   check-orphans:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Check Orphaned Packages
         id: orphan_cleanup
