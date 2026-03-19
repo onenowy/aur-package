@@ -1,18 +1,25 @@
 pkgbase = octopi
 	pkgdesc = This is Octopi, a powerful Pacman frontend using Qt libs (git checkout)
 	pkgver = 0.18.1
-	pkgrel = 2
+	pkgrel = 3
 	url = https://tintaescura.com/projects/octopi/
 	arch = x86_64
 	groups = system
 	license = GPL2
 	makedepends = git
-	makedepends = qt6-multimedia
-	makedepends = qt6-5compat
+	makedepends = qt6-base
+	makedepends = qt6-tools
 	depends = alpm_octopi_utils
-	depends = qtermwidget
-	depends = qt-sudo
 	depends = kstatusnotifieritem
+	depends = qt-sudo
+	depends = qt6-5compat
+	depends = qt6-multimedia
+	depends = qtermwidget
+	optdepends = inxi: for system information
+	optdepends = lsb-release: for system information
+	optdepends = paru: for AUR support
+	optdepends = yay: for AUR support
+	optdepends = pikaur: for AUR support
 	source = git+https://github.com/aarnt/octopi.git#tag=v0.18.1
 	md5sums = 4ef88d3a6aa749410f80adc537f25c70
 
