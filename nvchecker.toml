@@ -19,3 +19,8 @@ source = "github"
 github = "aarnt/octopi"
 use_latest_release = true
 prefix = "v"
+
+[ntfsprogs-plus]
+source = "github"
+github = "ntfsprogs-plus/ntfsprogs-plus"
+use_latest_release = true
