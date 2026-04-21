@@ -21,9 +21,9 @@ source=("${pkgname}-${pkgver}.tar.gz::https://github.com/ntfsprogs-plus/ntfsprog
 sha256sums=('3e3d9d2f3620cdebb128fb8dbc116f2c2a035f18000e3f01af204694ef8c7778')
 
 prepare() {
-  mv ${srcdir}/${pkgname}-* ${srcdir}/${pkgname}
+  mv "${srcdir}/${pkgname}-${pkgver}" "${srcdir}/${pkgname}"
 
-  cd ${srcdir}/${pkgname}
+  cd "${srcdir}/${pkgname}"
   ./autogen.sh
 }
 
