@@ -3,12 +3,15 @@
 
 pkgname=qt-sudo
 pkgver=2.4.0
-pkgrel=1
+pkgrel=2
 pkgdesc='A clone of LXQt sudo tool, without LXQt libs'
 arch=('x86_64')
 url='https://github.com/aarnt/qt-sudo.git'
 license=('LGPL2.1')
 depends=(
+  'libgcc_s.so'
+  'libstdc++.so'
+  'glibc'
   'qt6-base' # libQt6Core.so libQt6Gui.so libQt6Widgets.so
   'sudo'
 )
