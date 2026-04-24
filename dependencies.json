@@ -1,6 +1,5 @@
 {
   "octopi": [
-    "qt-sudo",
-    "alpm_octopi_utils"
+    "qt-sudo"
   ]
 }
