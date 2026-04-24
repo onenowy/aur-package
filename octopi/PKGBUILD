@@ -46,7 +46,8 @@ _source_octopi() {
   _pkgsrc_octopi="$_pkgname-$pkgver"
   local _pkgext="tar.gz"
   source+=("$_pkgsrc_octopi.$_pkgext"::"$url/archive/refs/tags/v$pkgver.$_pkgext")
-  sha256sums+=("${_cksum_octopi:-SKIP}")
+sha256sums=('bf2f6e2ab6208a020fd34fa6d88eaad5268132c4e38369818fd74267c0c54525'
+            '687f3e205cbcfac94e9237049c99ccb88d7cc1ac527c5528cd65ea93b14537fd')
 
   _prepare_octopi() (
     :
@@ -73,7 +74,6 @@ _source_alpm_utils() {
 
   _pkgsrc_alpm_utils="alpm_octopi_utils"
   source+=("$_pkgsrc_alpm_utils"::"git+https://github.com/aarnt/alpm_octopi_utils.git${_commit_alpm:+#commit=$_commit_alpm}")
-  sha256sums+=('SKIP')
 
   _prepare_alpm_utils() {
     :
