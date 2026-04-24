@@ -2,24 +2,21 @@
 # Contributor: Mark Wagie <mark dot wagie at proton dot me>
 # Contributor: MatMoul <matmoul at the google email domain which is .com>
 
-: ${_commit_alpm=789ba9acc52b7b0624fb08de9f4756b5d51c10f1}
-
-: ${_cksum_octopi=bf2f6e2ab6208a020fd34fa6d88eaad5268132c4e38369818fd74267c0c54525}
-
-_pkgname="octopi"
-pkgname="$_pkgname"
+pkgname=octopi
 pkgver=0.19.0
-pkgrel=2
+pkgrel=3
 pkgdesc="A powerful Pacman frontend using Qt libs"
+arch=('x86_64')
 url="https://github.com/aarnt/octopi"
 license=('GPL-2.0-or-later')
-arch=('x86_64')
-
 depends=(
+  'pacman'
+  'pacman-contrib'
   'qt6-base'
   'qt6-multimedia'
   'qt6-svg'
   'qtermwidget'
+  'qt-sudo'
 )
 makedepends=(
   'cmake'
@@ -41,86 +38,43 @@ optdepends=(
   'trizen: for AUR support'
   'yay: for AUR support'
 )
+conflicts=('alpm_octopi_utils')
 
-_source_octopi() {
-  _pkgsrc_octopi="$_pkgname-$pkgver"
-  local _pkgext="tar.gz"
-  source+=("$_pkgsrc_octopi.$_pkgext"::"$url/archive/refs/tags/v$pkgver.$_pkgext")
+_commit_alpm=789ba9acc52b7b0624fb08de9f4756b5d51c10f1
+
+source=(
+  "$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz"
+  "alpm_octopi_utils::git+https://github.com/aarnt/alpm_octopi_utils.git#commit=$_commit_alpm"
+)
 sha256sums=('bf2f6e2ab6208a020fd34fa6d88eaad5268132c4e38369818fd74267c0c54525'
             '687f3e205cbcfac94e9237049c99ccb88d7cc1ac527c5528cd65ea93b14537fd')
 
-  _prepare_octopi() (
-    :
-  )
-
-  _build_octopi() (
-    local _cmake_options=(
-      -B build_octopi
-      -S "$_pkgsrc_octopi"
-      -G Ninja
-      -DCMAKE_BUILD_TYPE=None
-      -DCMAKE_INSTALL_PREFIX='/usr'
-      -Dalpm_octopi_utils_DIR="'$srcdir/fakeinstall/usr/lib/cmake/alpm_octopi_utils/'"
-      -Wno-dev
-    )
-
-    cmake "${_cmake_options[@]}"
-    cmake --build build_octopi
-  )
-}
-
-_source_alpm_utils() {
-  conflicts+=('alpm_octopi_utils')
-
-  _pkgsrc_alpm_utils="alpm_octopi_utils"
-  source+=("$_pkgsrc_alpm_utils"::"git+https://github.com/aarnt/alpm_octopi_utils.git${_commit_alpm:+#commit=$_commit_alpm}")
-
-  _prepare_alpm_utils() {
-    :
-  }
-
-  _build_alpm_utils() (
-    local _cmake_options=(
-      -B build_alpm
-      -S "$_pkgsrc_alpm_utils"
-      -G Ninja
-      -DCMAKE_BUILD_TYPE=None
-      -DCMAKE_INSTALL_PREFIX='/usr'
-      -Wno-dev
-    )
-
-    cmake "${_cmake_options[@]}"
-    cmake --build build_alpm
-
-    DESTDIR="fakeinstall" cmake --install build_alpm
-  )
-}
-
-_source_octopi
-_source_alpm_utils
-
-prepare() {
-  _prepare_octopi
-  _prepare_alpm_utils
-}
-
 build() {
-  _build_alpm_utils
-  _build_octopi
+  # Build alpm_octopi_utils library
+  cmake -B build_alpm -S alpm_octopi_utils \
+    -G Ninja \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX='/usr' \
+    -Wno-dev
+  cmake --build build_alpm
+  DESTDIR="$srcdir/fakeinstall" cmake --install build_alpm
+
+  # Build octopi using the library built above
+  cmake -B build_octopi -S "$pkgname-$pkgver" \
+    -G Ninja \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX='/usr' \
+    -Dalpm_octopi_utils_DIR="$srcdir/fakeinstall/usr/lib/cmake/alpm_octopi_utils/" \
+    -Wno-dev
+  cmake --build build_octopi
 }
 
 package() {
-  depends+=(
-    'pacman'
-    'pacman-contrib'
-    'qt-sudo' # AUR
-  )
-
   DESTDIR="$pkgdir" cmake --install build_octopi
 
-  # library
-  install -Dm644 "fakeinstall/usr/lib/libalpm_octopi_utils.so" -t "$pkgdir/usr/lib/"
+  # Install bundled alpm_octopi_utils library
+  install -Dm644 "$srcdir/fakeinstall/usr/lib/libalpm_octopi_utils.so" -t "$pkgdir/usr/lib/"
 
-  # not needed for standard licenses
+  # Remove licenses directory as it's not strictly necessary for this package's build process
   rm -rf "$pkgdir/usr/share/licenses/"
 }
