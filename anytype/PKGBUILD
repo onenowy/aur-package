@@ -1,0 +1,49 @@
+# Maintainer: phil-gru <gphilipp23@gmail.com>
+# Contributor: elementh <hello@lucasmarino.me>
+pkgname=anytype
+pkgver=0.54.11
+pkgrel=1
+pkgdesc="Operating environment for the new internet. Anytype is a next generation software that breaks down barriers between applications, gives back privacy and data ownership to users."
+arch=('x86_64')
+url="https://anytype.io/"
+license=('MIT')
+depends=('alsa-lib' 'gtk3' 'nss')
+optdepends=('org.freedesktop.secrets: for not having to sign in each time')
+install=anytype.install
+source=(
+    "anytype-${pkgver}.tar.gz::https://github.com/anyproto/anytype-ts/releases/download/v${pkgver}/anytype-${pkgver}.tar.gz"
+    "anytype.desktop"
+    "anytype.sh"
+    "LICENSE"
+)
+sha256sums=('38303495c4168bbc848bf40aa6b94f77b950f6f683209402b1feee413c8b2595'
+            'fc7278bbbf990f13a96718c90336da11f95db8ba9839d447bce909ba33b27aa9'
+            '303584c930a831e4d6f480f12ada899fb15d672ecd3c13aa98b2a644d019da4c'
+            '0e5e95d8d412b3e7dac3fde35fefb8b481b0e17557eb1f055c2b90e2ffce3c66')
+
+package() {
+    cd "anytype-${pkgver}"
+
+    # Icon Installation
+    local _icon_dir="resources/app.asar.unpacked/electron/img/icons"
+    for _size in 16 32 64 128 256 512 1024; do
+        if [ -f "${_icon_dir}/${_size}x${_size}.png" ]; then
+            install -Dm644 "${_icon_dir}/${_size}x${_size}.png" \
+                "${pkgdir}/usr/share/icons/hicolor/${_size}x${_size}/apps/anytype.png"
+            rm "${_icon_dir}/${_size}x${_size}.png"
+        fi
+    done
+
+    # Application Files
+    install -dm755 "${pkgdir}/opt/anytype"
+    cp -r * "${pkgdir}/opt/anytype/"
+
+    # Binary Wrapper
+    install -Dm755 "${srcdir}/anytype.sh" "${pkgdir}/usr/bin/anytype"
+
+    # Desktop Entry
+    install -Dm644 "${srcdir}/anytype.desktop" "${pkgdir}/usr/share/applications/anytype.desktop"
+
+    # License
+    install -Dm644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}
