@@ -1,0 +1,24 @@
+pkgbase = anytype
+	pkgdesc = Operating environment for the new internet. Anytype is a next generation software that breaks down barriers between applications, gives back privacy and data ownership to users.
+	pkgver = 0.54.11
+	pkgrel = 1
+	url = https://anytype.io/
+	install = anytype.install
+	arch = x86_64
+	license = MIT
+	depends = alsa-lib
+	depends = gtk3
+	depends = nss
+	optdepends = org.freedesktop.secrets: for not having to sign in each time
+	options = !strip
+	options = !zipman
+	source = anytype-0.54.11.tar.gz::https://github.com/anyproto/anytype-ts/releases/download/v0.54.11/anytype-0.54.11.tar.gz
+	source = anytype.desktop
+	source = anytype.sh
+	source = LICENSE
+	sha256sums = 38303495c4168bbc848bf40aa6b94f77b950f6f683209402b1feee413c8b2595
+	sha256sums = fc7278bbbf990f13a96718c90336da11f95db8ba9839d447bce909ba33b27aa9
+	sha256sums = 303584c930a831e4d6f480f12ada899fb15d672ecd3c13aa98b2a644d019da4c
+	sha256sums = 0e5e95d8d412b3e7dac3fde35fefb8b481b0e17557eb1f055c2b90e2ffce3c66
+
+pkgname = anytype
