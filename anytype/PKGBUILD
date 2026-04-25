@@ -10,6 +10,7 @@ license=('MIT')
 depends=('alsa-lib' 'gtk3' 'nss')
 optdepends=('org.freedesktop.secrets: for not having to sign in each time')
 install=anytype.install
+options=(!strip !zipman)
 source=(
     "anytype-${pkgver}.tar.gz::https://github.com/anyproto/anytype-ts/releases/download/v${pkgver}/anytype-${pkgver}.tar.gz"
     "anytype.desktop"
