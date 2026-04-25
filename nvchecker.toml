@@ -28,5 +28,6 @@ use_latest_release = true
 [anytype]
 source = "github"
 github = "anyproto/anytype-ts"
+use_max_tag = true
 prefix = "v"
-include_regex = '^\d+\.\d+\.\d+$'
+include_regex = '^0\.\d+\.\d+$'
