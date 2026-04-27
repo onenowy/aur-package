@@ -1,11 +1,11 @@
 [Desktop Entry]
 Name=Anytype
-Exec=/opt/Anytype/anytype %U
+Comment=Project management and knowledge workspace
+Exec="/opt/anytype/anytype" %u
 Terminal=false
 Type=Application
 Icon=anytype
+Categories=Utility;Office;Calendar;ProjectManagement;
 StartupWMClass=anytype
-Categories=Utility;
 Keywords=project management;
 MimeType=x-scheme-handler/anytype;
-Comment=Anytype
