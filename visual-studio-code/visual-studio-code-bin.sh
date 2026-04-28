@@ -8,4 +8,4 @@ if [[ -f $XDG_CONFIG_HOME/code-flags.conf ]]; then
 fi
 
 # Launch
-exec /opt/visual-studio-code/bin/code "$@" $CODE_USER_FLAGS
+exec /usr/bin/electron39 /opt/visual-studio-code/resources/app "$@" $CODE_USER_FLAGS

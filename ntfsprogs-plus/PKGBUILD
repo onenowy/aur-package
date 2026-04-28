@@ -2,12 +2,12 @@
 
 pkgname=ntfsprogs-plus
 pkgver=1.0.0
-pkgrel=1
+pkgrel=2
 pkgdesc='NTFS filesystem utilities'
 arch=('x86_64')
 license=('GPL-2.0-or-later')
 url="https://github.com/ntfsprogs-plus/ntfsprogs-plus"
-depends=('util-linux')
+depends=('glibc' 'util-linux')
 makedepends=(
   'autoconf'
   'automake'
