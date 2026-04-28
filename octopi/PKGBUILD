@@ -27,6 +27,7 @@ makedepends=(
   'qt6-5compat'
   'qt6-tools'
   'qt6-svg'
+  'vala'
 )
 optdepends=(
   'inxi: for SysInfo log'
