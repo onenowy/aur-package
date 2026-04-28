@@ -38,7 +38,7 @@ source=(code-${pkgver}.desktop.in::https://raw.githubusercontent.com/microsoft/v
 sha256sums=('2f1782b30c4e040efff655fd9cf477930c5a0c81ddae27749b0cbb922c1d248e'
             'c361efa7e02fcad759ed80d2fbab67877f33219b981578af6fffaf18aeb12d9b'
             '3af748dd6578a1775e8eb7248ba397b7e11840df2ea6ee234ff76fee3dc306cf'
-            '65b34b99a1ddd8acb9fea8ccdda5ecbc1e7d7d86bace89e87836b2eaf23186c6'
+            'b008d55575e8cac27c1c5f8aef69de28a5a50e024920d222e3ed50db4218b1d4'
             '22ff9c740648bd01865b48182f0aba2eff14a6a0c1031f0481c7802e2bb6a65e')
 
 _set_meta_info() {
