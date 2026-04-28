@@ -1,7 +1,7 @@
 pkgbase = ntfsprogs-plus
 	pkgdesc = NTFS filesystem utilities
 	pkgver = 1.0.0
-	pkgrel = 1
+	pkgrel = 2
 	url = https://github.com/ntfsprogs-plus/ntfsprogs-plus
 	arch = x86_64
 	license = GPL-2.0-or-later
@@ -10,6 +10,7 @@ pkgbase = ntfsprogs-plus
 	makedepends = libtool
 	makedepends = libgcrypt
 	makedepends = pkgconf
+	depends = glibc
 	depends = util-linux
 	provides = ntfsprogs
 	provides = ntfsprogs-plus
