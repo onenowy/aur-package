@@ -3,7 +3,7 @@
 pkgname=visual-studio-code
 _pkgname=visual-studio-code
 pkgver=1.117.0
-pkgrel=2
+pkgrel=3
 pkgdesc="Visual Studio Code (vscode): Editor for building and debugging modern web and cloud applications (official binary version) - using system electron"
 arch=('x86_64')
 url="https://code.visualstudio.com/"
