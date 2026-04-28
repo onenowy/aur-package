@@ -13,7 +13,6 @@ depends=(
   'glibc'
   'libgcc'
   'libstdc++'
-  'octopi'
   'pacman'
   'pacman-contrib'
   'qt6-base'
