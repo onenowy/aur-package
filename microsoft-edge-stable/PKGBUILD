@@ -39,7 +39,6 @@ depends=(
   'qt6-base'
   'systemd-libs'
   'util-linux-libs'
-  'wasi-libc'
 )
 
 optdepends=('pipewire: WebRTC desktop sharing under Wayland'

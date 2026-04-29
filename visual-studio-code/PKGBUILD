@@ -21,7 +21,6 @@ depends=(
   'libstdc++'
   'libx11'
   'libxkbfile'
-  'wasi-libc'
   'electron39'
 )
 
