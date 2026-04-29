@@ -2,12 +2,12 @@
 
 pkgname=ntfsprogs-plus
 pkgver=1.0.0
-pkgrel=2
+pkgrel=3
 pkgdesc='NTFS filesystem utilities'
 arch=('x86_64')
 license=('GPL-2.0-or-later')
 url="https://github.com/ntfsprogs-plus/ntfsprogs-plus"
-depends=('glibc' 'util-linux')
+depends=('util-linux-libs')
 makedepends=(
   'autoconf'
   'automake'
@@ -57,3 +57,4 @@ package() {
   install -dm644 "${pkgdir}/usr/share/licenses/${pkgname}"
   install -Dm644 COPYING "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }
+

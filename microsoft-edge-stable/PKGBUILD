@@ -6,7 +6,7 @@ pkgname=microsoft-edge-stable
 _pkgname=microsoft-edge
 _pkgshortname=msedge
 pkgver=147.0.3912.86
-pkgrel=3
+pkgrel=4
 pkgdesc="A browser that combines a minimal design with sophisticated technology to make the web faster, safer, and easier"
 arch=('x86_64')
 url="https://www.microsoftedgeinsider.com/en-us/download"
@@ -18,11 +18,10 @@ depends=(
   'dbus'
   'expat'
   'glib2'
-  'glibc'
+  'gtk3'
   'libcups'
-  'libgcc'
   'libsecret'
-  'libstdc++'
+  'libva'
   'libx11'
   'libxcb'
   'libxcomposite'
@@ -32,11 +31,11 @@ depends=(
   'libxkbcommon'
   'libxml2'
   'libxrandr'
+  'libxss'
   'mesa'
   'nspr'
   'nss'
   'pango'
-  'qt6-base'
   'systemd-libs'
   'util-linux-libs'
 )
@@ -44,6 +43,8 @@ depends=(
 optdepends=('pipewire: WebRTC desktop sharing under Wayland'
             'kdialog: support for native dialogs in Plasma'
             'gtk4: for --gtk-version=4 (GTK4 IME might work better on Wayland)'
+            'qt5-base: for Qt5 integration'
+            'qt6-base: for Qt6 integration'
             'org.freedesktop.secrets: password storage backend on GNOME / Xfce / Plasma'
             'upower: Battery Status API support'
             'ttf-liberation: Fixes potential font rendering issues')
@@ -71,4 +72,3 @@ package() {
        rm -f "${pkgdir}/usr/share/applications/com.microsoft.Edge.desktop"
        mv "${pkgdir}/usr/share/applications/microsoft-edge.desktop" "${pkgdir}/usr/share/applications/com.microsoft.Edge.desktop"
 }
-
