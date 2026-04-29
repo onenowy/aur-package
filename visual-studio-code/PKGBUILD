@@ -2,8 +2,8 @@
 
 pkgname=visual-studio-code
 _pkgname=visual-studio-code
-pkgver=1.117.0
-pkgrel=8
+pkgver=1.118.1
+pkgrel=1
 pkgdesc="Visual Studio Code (vscode): Editor for building and debugging modern web and cloud applications (official binary version) - using system electron"
 arch=('x86_64')
 url="https://code.visualstudio.com/"
@@ -45,7 +45,7 @@ sha256sums=('2f1782b30c4e040efff655fd9cf477930c5a0c81ddae27749b0cbb922c1d248e'
             '3af748dd6578a1775e8eb7248ba397b7e11840df2ea6ee234ff76fee3dc306cf'
             '423374266fd9eec1a9785189e81372dcf8ea97855fb5cb3c55dfdd2209320ed2'
             '8abae366f429eb363ef26cf9b5b1866126afa6d4700a787ec04bdb5e3e42ae10'
-            '22ff9c740648bd01865b48182f0aba2eff14a6a0c1031f0481c7802e2bb6a65e')
+            '605d33bb46aa66918619a7f9b8da9a55a2f5b0c42e11523367531cceec277eae')
 
 _set_meta_info() {
   sed 's/@@NAME_LONG@@/Visual Studio Code/g' "$1" |\
