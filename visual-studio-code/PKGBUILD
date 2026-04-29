@@ -3,7 +3,7 @@
 pkgname=visual-studio-code
 _pkgname=visual-studio-code
 pkgver=1.117.0
-pkgrel=7
+pkgrel=8
 pkgdesc="Visual Studio Code (vscode): Editor for building and debugging modern web and cloud applications (official binary version) - using system electron"
 arch=('x86_64')
 url="https://code.visualstudio.com/"
@@ -78,7 +78,8 @@ package() {
   cp -r "${srcdir}/VSCode-linux-x64/"* "${pkgdir}/opt/${_pkgname}"
 
   # Unbundle ripgrep
-  ln -sf /usr/bin/rg "${pkgdir}/opt/${_pkgname}/resources/app/node_modules.asar.unpacked/@vscode/ripgrep/bin/rg"
+  # In the official binary, rg is located in node_modules, not node_modules.asar.unpacked
+  ln -sf /usr/bin/rg "${pkgdir}/opt/${_pkgname}/resources/app/node_modules/@vscode/ripgrep/bin/rg"
 
   # Remove bundled electron
   find "${pkgdir}/opt/${_pkgname}" -maxdepth 1 -type f -not -name 'LICENSE*' -not -name 'version' -delete
