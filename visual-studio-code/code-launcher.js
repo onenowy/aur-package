@@ -25,6 +25,11 @@ app.setAppPath(appPath);
 app.setDesktopName("code.desktop");
 app.setName(name);
 
+// Set the 'exe' path explicitly to our wrapper script.
+// This is critical for the "Save as Root" feature (pkexec), as VS Code 
+// uses this path to find its CLI for elevated file operations.
+app.setPath("exe", "/usr/bin/code");
+
 // Set data and cache paths to match official Microsoft binary expectations
 app.setPath("userCache", path.join(app.getPath("cache"), "Code"));
 app.setPath("userData", path.join(app.getPath("appData"), "Code"));
