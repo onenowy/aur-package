@@ -45,7 +45,7 @@ sha256sums=('2f1782b30c4e040efff655fd9cf477930c5a0c81ddae27749b0cbb922c1d248e'
             '3af748dd6578a1775e8eb7248ba397b7e11840df2ea6ee234ff76fee3dc306cf'
             '1e5ad4bed18c56376c8138ba3e23cb1668c0be9238ad7102f82e0a0b24b8fd1b'
             '26eadf50a91c0c247894c93b8160af3b9ae66199f1fcd9c91d32d670c4be059d'
-            '22ff9c740648bd01865b48182f0aba2eff14a6a0c1031f0481c7802e2bb6a65e')
+            '605d33bb46aa66918619a7f9b8da9a55a2f5b0c42e11523367531cceec277eae')
 
 _set_meta_info() {
   sed 's/@@NAME_LONG@@/Visual Studio Code/g' "$1" |\
