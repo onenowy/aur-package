@@ -5,7 +5,7 @@
 pkgname=microsoft-edge-stable
 _pkgname=microsoft-edge
 _pkgshortname=msedge
-pkgver=148.0.3967.96
+pkgver=149.0.4022.52
 pkgrel=1
 pkgdesc="A browser that combines a minimal design with sophisticated technology to make the web faster, safer, and easier"
 arch=('x86_64')
@@ -51,7 +51,7 @@ optdepends=('pipewire: WebRTC desktop sharing under Wayland'
 options=(!strip !zipman)
 source=("https://packages.microsoft.com/yumrepos/edge/Packages/m/${_pkgname}-stable-${pkgver}-1.x86_64.rpm"
         "microsoft-edge-stable.sh")
-sha256sums=('d3f6b6eab7d406eefa5b0fe52e240ada379c33de8dca5c279324df872d2c30c4'
+sha256sums=('f9f19f143cb919210ba16df12f7759d646d1944d590f75427321a3fd006e84d4'
             'dc3765d2de6520b13f105b8001aa0e40291bc9457ac508160b23eea8811e26af')
 
 package() {
