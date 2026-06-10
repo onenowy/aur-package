@@ -37,17 +37,17 @@ use_latest_release = true
 #prefix = "v"
 #include_regex = '^0\.\d+\.\d+$'
 
-[lm-studio-version]
-source = "regex"
-url = "https://lmstudio.ai/download"
-regex = '\\"linux\\":\{\\"x64\\":\{\\"version\\":\\"([\d\.]+)\\"'
+# [lm-studio-version]
+# source = "regex"
+# url = "https://lmstudio.ai/download"
+# regex = '\\"linux\\":\{\\"x64\\":\{\\"version\\":\\"([\d\.]+)\\"'
 
-[lm-studio-build]
-source = "regex"
-url = "https://lmstudio.ai/download"
-regex = '\\"linux\\":\{\\"x64\\":\{\\"version\\":\\"[0-9.]+\\",\\"build\\":\\"([0-9]+)\\"'
+# [lm-studio-build]
+# source = "regex"
+# url = "https://lmstudio.ai/download"
+# regex = '\\"linux\\":\{\\"x64\\":\{\\"version\\":\\"[0-9.]+\\",\\"build\\":\\"([0-9]+)\\"'
 
-[lm-studio]
-source = "combiner"
-from = ["lm-studio-version", "lm-studio-build"]
-format = "$1.$2"
+# [lm-studio]
+# source = "combiner"
+# from = ["lm-studio-version", "lm-studio-build"]
+# format = "$1.$2"
