@@ -24,7 +24,6 @@ depends=(
   'libxkbfile'
   'libxss'
   'nss'
-  'ripgrep'
   'xdg-utils'
 )
 
@@ -74,9 +73,7 @@ package() {
 
   cp -r "${srcdir}/VSCode-linux-x64/"* "${pkgdir}/opt/${_pkgname}"
 
-  # Unbundle ripgrep
-  # In the official binary, rg is located in node_modules, not node_modules.asar.unpacked
-  ln -sf /usr/bin/rg "${pkgdir}/opt/${_pkgname}/resources/app/node_modules/@vscode/ripgrep/bin/rg"
+
 
   # Install launcher
   install -m755 "${srcdir}/${_pkgname}-bin.sh" "${pkgdir}/usr/bin/code"

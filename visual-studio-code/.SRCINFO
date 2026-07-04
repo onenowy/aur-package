@@ -14,7 +14,6 @@ pkgbase = visual-studio-code
 	depends = libxkbfile
 	depends = libxss
 	depends = nss
-	depends = ripgrep
 	depends = xdg-utils
 	optdepends = glib2: Needed for move to trash functionality
 	optdepends = libdbusmenu-glib: Needed for KDE global menu
