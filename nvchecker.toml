@@ -25,18 +25,6 @@ prefix = "v"
 # github = "ntfsprogs-plus/ntfsprogs-plus"
 # use_latest_release = true
 
-# [antigravity-cli]
-# source = "github"
-# github = "google-antigravity/antigravity-cli"
-# use_latest_release = true
-
-#[anytype]
-#source = "github"
-#github = "anyproto/anytype-ts"
-#use_max_tag = true
-#prefix = "v"
-#include_regex = '^0\.\d+\.\d+$'
-
 # [lm-studio-version]
 # source = "regex"
 # url = "https://lmstudio.ai/download"
