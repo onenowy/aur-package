@@ -1,6 +1,6 @@
 pkgbase = obsidian-bundled
 	pkgdesc = A powerful knowledge base that works on top of a local folder of plain text Markdown files (using bundled Electron)
-	pkgver = 1.12.7
+	pkgver = 1.13.4
 	pkgrel = 1
 	url = https://obsidian.md
 	install = obsidian.install
@@ -21,10 +21,10 @@ pkgbase = obsidian-bundled
 	source = obsidian.sh
 	source = obsidian.desktop
 	source = LICENSE-Obsidian
-	source = https://github.com/obsidianmd/obsidian-releases/releases/download/v1.12.7/obsidian-1.12.7.tar.gz
-	sha256sums = 56cc879afe1ccd207f8e5146afdce16226db17dba1784b1176ee20678faece33
+	source = https://github.com/obsidianmd/obsidian-releases/releases/download/v1.13.4/obsidian-1.13.4.tar.gz
+	sha256sums = a4f5cf374a88b686e0680532fdac2008fada514e2c2666f6cee88ff3c2dcd481
 	sha256sums = be67713e873a5935d910efc6f6005c104b35c7b3a002dfcb5643fd185d1b0056
 	sha256sums = d9fdc14f9c2fb95bb38310281268fdad413c1b49fa93213df3184f9b0ca1175c
-	sha256sums = fcbe08b111d9c1fdb09b9c08952b06e1c829c62163eba2584c4b4ec859be079d
+	sha256sums = ebac249f949b6894819fbb4bc5657ec8892f006cefed955d34a6c1ffe262f16b
 
 pkgname = obsidian-bundled
