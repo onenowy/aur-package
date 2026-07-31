@@ -32,7 +32,7 @@ source=(
   "https://github.com/obsidianmd/obsidian-releases/releases/download/v${pkgver}/obsidian-${pkgver}.tar.gz"
 )
 sha256sums=('a4f5cf374a88b686e0680532fdac2008fada514e2c2666f6cee88ff3c2dcd481'
-            'be67713e873a5935d910efc6f6005c104b35c7b3a002dfcb5643fd185d1b0056'
+            'def820b4bbedd91306124b1b66745503d64f8add1625e4c9d68f59b00b23fa2f'
             'd9fdc14f9c2fb95bb38310281268fdad413c1b49fa93213df3184f9b0ca1175c'
             'ebac249f949b6894819fbb4bc5657ec8892f006cefed955d34a6c1ffe262f16b')
 
