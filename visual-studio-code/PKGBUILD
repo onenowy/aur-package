@@ -89,7 +89,4 @@ package() {
   # Install launcher
   install -m755 "${srcdir}/code.sh" "${pkgdir}/usr/bin/code"
   install -m755 "${srcdir}/code.mjs" "${pkgdir}/opt/${_pkgname}/resources/app/code.mjs"
-  # Create symlink for cliPath expected by VS Code when performing elevated operations (pkexec Save as Root)
-  install -d "${pkgdir}/usr/lib/${_electron}/bin"
-  ln -sf /usr/bin/code "${pkgdir}/usr/lib/${_electron}/bin/code"
 }
