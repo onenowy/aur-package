@@ -5,7 +5,7 @@
 pkgname=obsidian.md
 _pkgname=obsidian
 pkgver=1.13.7
-pkgrel=1
+pkgrel=2
 pkgdesc="A powerful knowledge base that works on top of a local folder of plain text Markdown files"
 arch=('x86_64')
 url="https://obsidian.md"
@@ -36,11 +36,11 @@ package() {
     # Most of the release package is electron, but we use system's default one
     # So strip away asar packages and put them to /usr/lib/
     cd "${_pkgname}-${pkgver}"/resources/
-    install -dm0755 "$pkgdir"/usr/lib/obsidian
+    install -dm0755 "$pkgdir"/opt/obsidian
     # install icon
     install -Dm644 icon.png "$pkgdir"/usr/share/icons/hicolor/512x512/apps/obsidian.png
-    find . -type d -exec install -d {,"$pkgdir"/usr/lib/obsidian/}{} \;
-    find . -type f -exec install -D {,"$pkgdir"/usr/lib/obsidian/}{} \;
+    find . -type d -exec install -d {,"$pkgdir"/opt/obsidian/}{} \;
+    find . -type f -exec install -D {,"$pkgdir"/opt/obsidian/}{} \;
 
     install -Dm644 "$srcdir"/LICENSE-Obsidian "$pkgdir"/usr/share/licenses/$pkgname/LICENSE-Obsidian
 }
