@@ -1,4 +1,4 @@
-pkgbase = obsidian
+pkgbase = obsidian.md
 	pkgdesc = A powerful knowledge base that works on top of a local folder of plain text Markdown files
 	pkgver = 1.13.7
 	pkgrel = 1
@@ -11,6 +11,8 @@ pkgbase = obsidian
 	depends = zlib
 	depends = hicolor-icon-theme
 	depends = electron
+	provides = obsidian
+	conflicts = obsidian
 	options = !strip
 	source = obsidian.sh
 	source = obsidian.desktop
@@ -21,4 +23,4 @@ pkgbase = obsidian
 	sha256sums = d9fdc14f9c2fb95bb38310281268fdad413c1b49fa93213df3184f9b0ca1175c
 	sha256sums = d3cbe375cbfa4024db1910b98191649f4134c5c48aee5e60b6e7713987dcdb28
 
-pkgname = obsidian
+pkgname = obsidian.md

@@ -2,7 +2,8 @@
 # Contributor: Gennadiy Mykhailiuta <gmykhailiuta@gmail.com>
 # Contributor: Xuanwo <xuanwo@archlinuxcn.org>
 
-pkgname=obsidian
+pkgname=obsidian.md
+_pkgname=obsidian
 pkgver=1.13.7
 pkgrel=1
 pkgdesc="A powerful knowledge base that works on top of a local folder of plain text Markdown files"
@@ -10,6 +11,8 @@ arch=('x86_64')
 url="https://obsidian.md"
 license=('LicenseRef-Obsidian')
 depends=('fontconfig' 'bash' 'zlib' 'hicolor-icon-theme' 'electron')
+provides=("${_pkgname}")
+conflicts=("${_pkgname}")
 install=obsidian.install
 options=(!strip)
 source=("obsidian.sh"
@@ -25,14 +28,14 @@ package() {
     cd "$srcdir"
 
     # Install executable file
-    install -Dm755 "$pkgname".sh "$pkgdir"/usr/bin/obsidian
+    install -Dm755 "${_pkgname}.sh" "$pkgdir"/usr/bin/obsidian
 
     # Install desktop file
-    install -Dm644 "$pkgname".desktop -t "$pkgdir"/usr/share/applications/
+    install -Dm644 "${_pkgname}.desktop" -t "$pkgdir"/usr/share/applications/
 
     # Most of the release package is electron, but we use system's default one
     # So strip away asar packages and put them to /usr/lib/
-    cd "${pkgname}-${pkgver}"/resources/
+    cd "${_pkgname}-${pkgver}"/resources/
     install -dm0755 "$pkgdir"/usr/lib/obsidian
     # install icon
     install -Dm644 icon.png "$pkgdir"/usr/share/icons/hicolor/512x512/apps/obsidian.png
