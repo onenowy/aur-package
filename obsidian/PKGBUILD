@@ -1,0 +1,43 @@
+# Maintainer: Sven-Hendrik Haase <svenstaro@archlinux.org>
+# Contributor: Gennadiy Mykhailiuta <gmykhailiuta@gmail.com>
+# Contributor: Xuanwo <xuanwo@archlinuxcn.org>
+
+pkgname=obsidian
+pkgver=1.13.6
+pkgrel=1
+pkgdesc="A powerful knowledge base that works on top of a local folder of plain text Markdown files"
+arch=('x86_64')
+url="https://obsidian.md"
+license=('LicenseRef-Obsidian')
+depends=('fontconfig' 'bash' 'zlib' 'hicolor-icon-theme' 'electron')
+install=obsidian.install
+options=(!strip)
+source=("obsidian.sh"
+        "obsidian.desktop"
+        "LICENSE-Obsidian"
+        "https://github.com/obsidianmd/obsidian-releases/releases/download/v${pkgver}/obsidian-${pkgver}.tar.gz")
+sha256sums=('65111c9b78df85da9ff2666c3fdc1aec8cef4adb3489394622d058a878cb2e92'
+            '99c075af3f34cb358d6e93565686792c45562b17f8002fce0e8a63b83cbbe786'
+            'd9fdc14f9c2fb95bb38310281268fdad413c1b49fa93213df3184f9b0ca1175c'
+            '325cb381c649ba62b4475627b416dc3929dc913d839e4bba766307863f63f8a5')
+
+package() {
+    cd "$srcdir"
+
+    # Install executable file
+    install -Dm755 "$pkgname".sh "$pkgdir"/usr/bin/obsidian
+
+    # Install desktop file
+    install -Dm644 "$pkgname".desktop -t "$pkgdir"/usr/share/applications/
+
+    # Most of the release package is electron, but we use system's default one
+    # So strip away asar packages and put them to /usr/lib/
+    cd "${pkgname}-${pkgver}"/resources/
+    install -dm0755 "$pkgdir"/usr/lib/obsidian
+    # install icon
+    install -Dm644 icon.png "$pkgdir"/usr/share/icons/hicolor/512x512/apps/obsidian.png
+    find . -type d -exec install -d {,"$pkgdir"/usr/lib/obsidian/}{} \;
+    find . -type f -exec install -D {,"$pkgdir"/usr/lib/obsidian/}{} \;
+
+    install -Dm644 "$srcdir"/LICENSE-Obsidian "$pkgdir"/usr/share/licenses/$pkgname/LICENSE-Obsidian
+}

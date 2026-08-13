@@ -20,11 +20,11 @@ github = "aarnt/octopi"
 use_latest_release = true
 prefix = "v"
 
-# [obsidian-bundled]
-# source = "github"
-# github = "obsidianmd/obsidian-releases"
-# use_latest_release = true
-# prefix = "v"
+[obsidian]
+source = "github"
+github = "obsidianmd/obsidian-releases"
+use_latest_release = true
+prefix = "v"
 
 # [ntfsprogs-plus]
 # source = "github"
