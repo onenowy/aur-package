@@ -1,4 +1,4 @@
-pkgbase = microsoft-edge-stable
+pkgbase = microsoft-edge
 	pkgdesc = A browser that combines a minimal design with sophisticated technology to make the web faster, safer, and easier
 	pkgver = 151.0.4129.78
 	pkgrel = 2
@@ -37,11 +37,16 @@ pkgbase = microsoft-edge-stable
 	optdepends = qt6-base: for Qt6 integration
 	optdepends = org.freedesktop.secrets: password storage backend on GNOME / Xfce / Plasma
 	optdepends = upower: Battery Status API support
+<<<<<<< HEAD:microsoft-edge-stable/.SRCINFO
+=======
+	provides = microsoft-edge-stable
+	conflicts = microsoft-edge-stable
+>>>>>>> fa09b0b (change pkg name of edge):microsoft-edge/.SRCINFO
 	options = !strip
 	options = !zipman
 	source = https://packages.microsoft.com/yumrepos/edge/Packages/m/microsoft-edge-stable-151.0.4129.78-1.x86_64.rpm
-	source = microsoft-edge-stable.sh
+	source = microsoft-edge.sh
 	sha256sums = bc2a4a98d2d8dc3d76c3ba557172122e8619040f96f1ccaa13cc93ffb8169cb4
-	sha256sums = dc3765d2de6520b13f105b8001aa0e40291bc9457ac508160b23eea8811e26af
+	sha256sums = 6b11bfece9162a8ad4d45c29b2f44dc1fc1db8853c9ed81823f51f61193d15e5
 
-pkgname = microsoft-edge-stable
+pkgname = microsoft-edge

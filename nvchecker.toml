@@ -1,4 +1,4 @@
-[microsoft-edge-stable]
+[microsoft-edge]
 source = "rpmrepo"
 repo = "https://packages.microsoft.com/yumrepos/edge"
 pkg = "microsoft-edge-stable"
