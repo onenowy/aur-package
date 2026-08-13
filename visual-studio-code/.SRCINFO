@@ -1,7 +1,7 @@
 pkgbase = visual-studio-code
 	pkgdesc = Visual Studio Code (vscode): Editor for building and debugging modern web and cloud applications (official binary version) - using system electron
 	pkgver = 1.133.0
-	pkgrel = 2
+	pkgrel = 3
 	url = https://code.visualstudio.com/
 	install = visual-studio-code.install
 	arch = x86_64
@@ -13,7 +13,6 @@ pkgbase = visual-studio-code
 	depends = ripgrep
 	depends = xdg-utils
 	optdepends = glib2: Needed for move to trash functionality
-	optdepends = libdbusmenu-glib: Needed for KDE global menu
 	optdepends = org.freedesktop.secrets: Needed for settings sync
 	optdepends = icu: Needed for live share
 	provides = code
