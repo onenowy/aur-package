@@ -10,8 +10,6 @@ pkgdesc="A browser that combines a minimal design with sophisticated technology 
 arch=('x86_64')
 url="https://www.microsoftedgeinsider.com/en-us/download"
 license=('custom')
-provides=('microsoft-edge-stable')
-conflicts=('microsoft-edge-stable')
 depends=(
   'alsa-lib'
   'at-spi2-core'
