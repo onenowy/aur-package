@@ -6,7 +6,7 @@ pkgname=microsoft-edge-stable
 _pkgname=microsoft-edge
 _pkgshortname=msedge
 pkgver=151.0.4129.78
-pkgrel=1
+pkgrel=2
 pkgdesc="A browser that combines a minimal design with sophisticated technology to make the web faster, safer, and easier"
 arch=('x86_64')
 url="https://www.microsoftedgeinsider.com/en-us/download"
@@ -43,11 +43,9 @@ depends=(
 optdepends=('pipewire: WebRTC desktop sharing under Wayland'
             'kdialog: support for native dialogs in Plasma'
             'gtk4: for --gtk-version=4 (GTK4 IME might work better on Wayland)'
-            'qt5-base: for Qt5 integration'
             'qt6-base: for Qt6 integration'
             'org.freedesktop.secrets: password storage backend on GNOME / Xfce / Plasma'
-            'upower: Battery Status API support'
-            'ttf-liberation: Fixes potential font rendering issues')
+            'upower: Battery Status API support')
 options=(!strip !zipman)
 source=("https://packages.microsoft.com/yumrepos/edge/Packages/m/${_pkgname}-stable-${pkgver}-1.x86_64.rpm"
         "microsoft-edge-stable.sh")
