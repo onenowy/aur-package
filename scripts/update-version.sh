@@ -54,6 +54,11 @@ check_package() {
             sed -i "s/^pkgver=.*/pkgver=${upstream_ver}/" "$pkgbuild_path"
             sed -i "s/^pkgrel=.*/pkgrel=1/" "$pkgbuild_path"
             
+            # Run package-specific update script if present (e.g. updating _build or _electron)
+            if [ -f "$pkg_dir/update.sh" ]; then
+                bash "$pkg_dir/update.sh" "$pkgbuild_path" || true
+            fi
+            
             # Since we updated the PKGBUILD, we definitely need to build.
             # Skip Check 2 as requested.
             echo "$pkg_dir"
