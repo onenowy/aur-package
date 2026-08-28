@@ -26,6 +26,11 @@ github = "obsidianmd/obsidian-releases"
 use_latest_release = true
 prefix = "v"
 
+[antigravity]
+source = "regex"
+url = "https://antigravity.google/changelog"
+regex = 'href="/releases\?tab=hub&amp;version=([\d\.]+)"'
+
 # [ntfsprogs-plus]
 # source = "github"
 # github = "ntfsprogs-plus/ntfsprogs-plus"
