@@ -39,6 +39,12 @@ suite = "stable"
 repo = "main"
 arch = "amd64"
 
+[chatgpt]
+source = "rpmrepo"
+repo = "https://persistent.oaistatic.com/codex-app-prod/linux/rpm/x86_64"
+pkg = "chatgpt"
+arch = "x86_64"
+
 # [ntfsprogs-plus]
 # source = "github"
 # github = "ntfsprogs-plus/ntfsprogs-plus"

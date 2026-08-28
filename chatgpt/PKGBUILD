@@ -1,0 +1,77 @@
+# Maintainer: Akira <akira.uestc at gmail dot com>
+# Releases (x86_64): https://persistent.oaistatic.com/codex-app-prod/linux/rpm/x86_64/repodata/repomd.xml
+
+pkgname=chatgpt
+pkgver=26.825.31414
+pkgrel=1
+pkgdesc="Official ChatGPT desktop application for Linux"
+arch=('x86_64')
+url="https://chatgpt.com/download"
+license=('LicenseRef-custom')
+options=('!strip' '!debug')
+provides=('chatgpt-desktop')
+conflicts=('chatgpt-desktop')
+
+depends=(
+  'alsa-lib'
+  'at-spi2-core'
+  'cairo'
+  'dbus'
+  'expat'
+  'gcc-libs'
+  'gdk-pixbuf2'
+  'glib2'
+  'glibc'
+  'gtk3'
+  'hicolor-icon-theme'
+  'libcups'
+  'libglvnd'
+  'libnotify'
+  'libpulse'
+  'libsecret'
+  'libx11'
+  'libxcb'
+  'libxcomposite'
+  'libxdamage'
+  'libxext'
+  'libxfixes'
+  'libxkbcommon'
+  'libxrandr'
+  'mesa'
+  'nspr'
+  'nss'
+  'pango'
+  'systemd-libs'
+  'xdg-utils'
+)
+
+optdepends=(
+  'apparmor: automatically load the bundled profile for Chromium user namespaces'
+  'git: enable Git repository integration'
+  'gtk4: use the GTK 4 backend with --gtk-version=4'
+  'kde-cli-tools: move deleted files to the Plasma trash through kioclient'
+  'libusb: support for hardware accessories (e.g. Work Louder devices)'
+  'org.freedesktop.secrets: securely store credentials with a Secret Service backend'
+  'pipewire: enable WebRTC screen sharing under Wayland'
+  'qt5-base: for Qt5 desktop integration via libqt5_shim'
+  'qt6-base: for Qt6 desktop integration via libqt6_shim'
+)
+
+backup=('etc/apparmor.d/chatgpt')
+install="${pkgname}.install"
+
+source=("${pkgname}-${pkgver}-1.x86_64.rpm::https://persistent.oaistatic.com/codex-app-prod/linux/rpm/x86_64/chatgpt-${pkgver}-1.x86_64.rpm")
+sha256sums=('38a4d6459efaf31f80b1bbe84e14bee48349c9fcf161baf109754c643b25aab2')
+
+package() {
+  cp --parents -a {etc,usr} "$pkgdir"
+
+  install -Dm644 "${pkgdir}/usr/share/doc/chatgpt/copyright" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/copyright"
+  ln -s /usr/lib/chatgpt/LICENSE \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  ln -s /usr/lib/chatgpt/LICENSES.chromium.html \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSES.chromium.html"
+
+  rm -rf "${pkgdir}/usr/share/doc"
+}
