@@ -1,6 +1,6 @@
 pkgbase = chatgpt
 	pkgdesc = Official ChatGPT desktop application for Linux
-	pkgver = 26.825.31414
+	pkgver = 26.825.41651
 	pkgrel = 1
 	url = https://chatgpt.com/download
 	install = chatgpt.install
@@ -50,7 +50,7 @@ pkgbase = chatgpt
 	options = !strip
 	options = !debug
 	backup = etc/apparmor.d/chatgpt
-	source = chatgpt-26.825.31414-1.x86_64.rpm::https://persistent.oaistatic.com/codex-app-prod/linux/rpm/x86_64/chatgpt-26.825.31414-1.x86_64.rpm
-	sha256sums = 38a4d6459efaf31f80b1bbe84e14bee48349c9fcf161baf109754c643b25aab2
+	source = chatgpt-26.825.41651-1.x86_64.rpm::https://persistent.oaistatic.com/codex-app-prod/linux/rpm/x86_64/chatgpt-26.825.41651-1.x86_64.rpm
+	sha256sums = 366b65bc7303670299cdfc5734729eb01dfaa85cbcf3574a99bfd737a9683114
 
 pkgname = chatgpt
