@@ -2,7 +2,7 @@
 # Releases (x86_64): https://persistent.oaistatic.com/codex-app-prod/linux/rpm/x86_64/repodata/repomd.xml
 
 pkgname=chatgpt
-pkgver=26.903.71938
+pkgver=26.908.40834
 pkgrel=1
 pkgdesc="Official ChatGPT desktop application for Linux"
 arch=('x86_64')
@@ -61,7 +61,7 @@ backup=('etc/apparmor.d/chatgpt')
 install="${pkgname}.install"
 
 source=("${pkgname}-${pkgver}-1.x86_64.rpm::https://persistent.oaistatic.com/codex-app-prod/linux/rpm/x86_64/chatgpt-${pkgver}-1.x86_64.rpm")
-sha256sums=('25ec6b75b803ab2cecc0243329af49ca2618a783a94561a447cf47cdc64edf1f')
+sha256sums=('fc63bde0c514e2066d2ce213ec5f1bf59622f436cb7721561a5f923aeacf3657')
 
 package() {
   cp --parents -a {etc,usr} "$pkgdir"
