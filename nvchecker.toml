@@ -39,11 +39,18 @@ suite = "stable"
 repo = "main"
 arch = "amd64"
 
-[chatgpt]
-source = "rpmrepo"
-repo = "https://persistent.oaistatic.com/codex-app-prod/linux/rpm/x86_64"
-pkg = "chatgpt"
-arch = "x86_64"
+# [chatgpt]
+# # Reads chatgpt-bin's version from OpenAI's pacman repository database,
+# # dropping the upstream pkgrel. GNU tar only detects compression on files,
+# # not pipes, so the database is downloaded to a temporary file first.
+# source = "cmd"
+# cmd = '''
+# db=$(mktemp) &&
+# curl -sfL -o "$db" 'https://persistent.oaistatic.com/codex-app-prod/linux/arch/x86_64/openai-chatgpt.db' &&
+# tar -xOf "$db" --wildcards '*/desc' |
+# awk '/^%NAME%$/ { getline; name = $0 } /^%VERSION%$/ { getline; if (name == "chatgpt-bin") { sub(/-[^-]*$/, ""); print; exit } }'
+# status=$?; rm -f "$db"; exit $status
+# '''
 
 # [ntfsprogs-plus]
 # source = "github"
