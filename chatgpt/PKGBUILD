@@ -3,7 +3,7 @@
 
 pkgname=chatgpt
 pkgver=26.908.70816
-pkgrel=1
+pkgrel=2
 pkgdesc="Official ChatGPT desktop application for Linux"
 arch=('x86_64')
 url="https://chatgpt.com/download"
@@ -60,11 +60,20 @@ optdepends=(
 backup=('etc/apparmor.d/chatgpt')
 install="${pkgname}.install"
 
-source=("${pkgname}-${pkgver}-1.x86_64.rpm::https://persistent.oaistatic.com/codex-app-prod/linux/rpm/x86_64/chatgpt-${pkgver}-1.x86_64.rpm")
-sha256sums=('282effa178b73a08a9817bd56059403d6773156111151793510e4444226c2aa6')
+source=("${pkgname}-${pkgver}-1.x86_64.rpm::https://persistent.oaistatic.com/codex-app-prod/linux/rpm/x86_64/chatgpt-${pkgver}-1.x86_64.rpm"
+        "${pkgname}.sh")
+sha256sums=('282effa178b73a08a9817bd56059403d6773156111151793510e4444226c2aa6'
+            '5a85913807fd810bbc52796e0b0b52f42deaa541181d9848cf1886694ebafbde')
 
 package() {
   cp --parents -a {etc,usr} "$pkgdir"
+
+  # ChatGPT runs on OpenAI's own "Owl" Chromium shell, which refuses stock
+  # Electron, so it keeps its bundled runtime. The upstream launcher
+  # symlink (-> ../lib/chatgpt/codex-launcher) is replaced with a script
+  # that also passes the flags from ~/.config/chatgpt-flags.conf.
+  rm "${pkgdir}/usr/bin/chatgpt"
+  install -m755 "${pkgname}.sh" "${pkgdir}/usr/bin/chatgpt"
 
   install -Dm644 "${pkgdir}/usr/share/doc/chatgpt/copyright" \
     "${pkgdir}/usr/share/licenses/${pkgname}/copyright"
