@@ -10,8 +10,8 @@
 # Electron through a launcher script (see prepare() and package()).
 
 pkgname=claude-desktop
-pkgver=1.52386.6
-pkgrel=2
+pkgver=2.110.0
+pkgrel=1
 pkgdesc="Official Claude AI desktop app from Anthropic — Chat, Cowork, and Claude Code"
 arch=('x86_64')
 url="https://claude.com/download"
@@ -61,7 +61,7 @@ options=('!strip' '!debug')
 _baseurl="https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop"
 source=("${_baseurl}/${pkgname}_${pkgver}_amd64.deb"
         "${pkgname}.sh")
-sha256sums=('2e83a76c6ed9187671bfe80664fc6d59840171f4a2a81f408662c879a67f4e0a'
+sha256sums=('f44cb8b52f6e9171ac2e67cbcc8070c4974a2f0a9b9f141b430b32b4ff541109'
             '42d7679e68da6143f2b1460114a368fb58ad298df700740cf6efa2ff3227503d')
 
 prepare() {
