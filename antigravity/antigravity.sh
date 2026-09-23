@@ -14,6 +14,4 @@ for line in "${lines[@]}"; do
     fi
 done
 
-# The /usr/bin/electron wrapper sets ELECTRON_FORCE_IS_PACKAGED=true, which
-# the app needs to resolve its resources (see PKGBUILD).
-exec /usr/bin/electron /opt/Antigravity/resources/app.asar "${flags[@]}" "$@"
+exec /opt/Antigravity/antigravity "${flags[@]}" "$@"

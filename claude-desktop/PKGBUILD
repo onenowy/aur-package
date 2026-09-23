@@ -5,40 +5,57 @@
 # scripts do Debian/Ubuntu-specific work (apt repository registration and
 # an AppArmor exception for Ubuntu's user namespace restriction), so none
 # of that is reproduced here.
-#
-# The bundled Electron runtime is dropped: the app runs on the system
-# Electron through a launcher script (see prepare() and package()).
 
 pkgname=claude-desktop
 pkgver=2.2553.13
-pkgrel=1
+pkgrel=2
 pkgdesc="Official Claude AI desktop app from Anthropic — Chat, Cowork, and Claude Code"
 arch=('x86_64')
 url="https://claude.com/download"
 license=('LicenseRef-Proprietary')
 
-# Runtime dependencies. The system Electron brings the whole Chromium
-# stack (gtk3, nss, alsa-lib, ...) with it; what remains is what the
-# app's own components need:
-#  - libraries its native binaries link directly (verified with readelf):
-#    gcc-libs and glibc, plus libcap-ng and libseccomp for the bundled
-#    virtiofsd;
-#  - the rest of the .deb's "Depends:" field, translated to Arch names.
-#    namcap flags some of these as "may not be needed": those are loaded
-#    with dlopen(), spawned as programs, or used via D-Bus, all invisible
-#    to namcap's ELF-header analysis. They are needed.
-depends=('electron'
+# Runtime dependencies, from two sources:
+#  - the .deb's "Depends:" field, translated to Arch names (Debian and
+#    Arch name the same libraries differently, e.g. libgtk-3-0 -> gtk3);
+#  - libraries namcap verified the shipped binaries link directly
+#    (cairo, dbus, libx11, ... — otherwise they would only be reachable
+#    transitively through gtk3's own dependencies, which is fragile).
+# alsa-lib is only a "Recommends:" on Debian, but Chromium needs it for
+# audio output, so it is a hard dependency here.
+# namcap flags some of these as "may not be needed": those are loaded
+# with dlopen(), spawned as programs, or used via D-Bus, all invisible
+# to namcap's ELF-header analysis. They are needed.
+depends=('alsa-lib'
+         'at-spi2-core'
+         'cairo'
+         'dbus'
+         'expat'
          'gcc-libs'
+         'glib2'
          'glibc'
+         'gtk3'
          'hicolor-icon-theme'
          'libcap-ng'
+         'libcups'
          'libnotify'
          'libseccomp'
          'libsecret'
+         'libx11'
+         'libxcb'
+         'libxcomposite'
+         'libxdamage'
+         'libxext'
+         'libxfixes'
+         'libxkbcommon'
+         'libxrandr'
+         'mesa'
+         'nspr'
+         'nss'
+         'pango'
          'socat'
+         'systemd-libs'
          'xdg-desktop-portal'
          'xdg-utils')
-makedepends=('asar')
 
 optdepends=('edk2-ovmf: UEFI firmware for Cowork VM sandbox'
             'gnome-keyring: credential storage via Secret Service (GNOME)'
@@ -52,63 +69,39 @@ optdepends=('edk2-ovmf: UEFI firmware for Cowork VM sandbox'
 conflicts=('claude' 'claude-desktop-bin')
 
 # makepkg normally strips debug symbols from binaries after package().
-# The remaining binaries (Cowork helpers, native Node modules) are
-# prebuilt upstream: stripping saves little and risks breaking them, so
-# it is disabled. !debug disables the companion -debug package, which
-# only makes sense when compiling from source.
+# These are prebuilt Electron/Chromium binaries: stripping can corrupt
+# them (embedded resources, V8 snapshot data) and saves nothing, so it
+# is disabled. !debug disables the companion -debug package, which only
+# makes sense when compiling from source.
 options=('!strip' '!debug')
 
 _baseurl="https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop"
 source=("${_baseurl}/${pkgname}_${pkgver}_amd64.deb"
         "${pkgname}.sh")
 sha256sums=('02a95a9d133472c1b773c8e9dbdee56681b8164500178083bd8b53b9d11d109f'
-            '42d7679e68da6143f2b1460114a368fb58ad298df700740cf6efa2ff3227503d')
+            '2db1a6526034a306c2f2a2fb4547e54aa52353751f193c596b78aa6479f8f67f')
 
-prepare() {
+package() {
   # A .deb is an ar archive, which makepkg unpacks like any other source:
   # $srcdir holds debian-binary, control.tar.xz (package metadata and the
   # maintainer scripts, both unused here) and data.tar.xz — the file
   # payload, which is the entire package.
-  rm -rf data app
-  mkdir data
-  tar -xf data.tar.xz -C data
+  tar -xf data.tar.xz -C "$pkgdir"
 
-  # --- System Electron ---------------------------------------------------
-  # The launcher runs "electron .../app.asar" instead of the bundled
-  # Electron binary. Two things in the app's code assume the bundled
-  # layout, so app.asar is unpacked, patched and repacked:
-  #
-  # process.resourcesPath: under the system Electron this is Electron's
-  # own resources directory, but the app looks there for its files
-  # (Cowork VM helpers, i18n, icons, chrome-native-host,
-  # app.asar.unpacked). It is replaced with their real location.
-  #
-  # process.execPath: launch at login writes an autostart entry named
-  # after, and executing, the running binary, which would now be bare
-  # Electron. The entry is pointed at the launcher instead, keeping the
-  # file name and Exec= line the bundled app used, so entries created
-  # before this change keep working.
-  local resources=data/usr/lib/claude-desktop/resources
-  asar extract "$resources/app.asar" app
-  grep -rlZ --include='*.js' -e 'process\.resourcesPath' -e 'process\.execPath' app |
-    xargs -0 -r sed -i -E \
-      -e 's|process\.resourcesPath|"/usr/lib/claude-desktop/resources"|g' \
-      -e 's|\$\{[[:alnum:]_$.]+\.basename\(process\.execPath\)\}\.desktop|claude-desktop.desktop|g' \
-      -e 's|(Exec=\$\{[[:alnum:]_$]+\()process\.execPath(\)\} --startup)|\1"/usr/lib/claude-desktop/claude-desktop"\2|g'
-  rm -r "$resources/app.asar" "$resources/app.asar.unpacked"
-  asar pack app "$resources/app.asar" --unpack '{*.node,github-mcp-server}'
-}
+  # chrome-sandbox is Chromium's setuid sandbox helper: mode 4755
+  # (setuid root) lets it create the browser sandbox on kernels where
+  # unprivileged user namespaces are disabled. Arch enables those, so
+  # this is only a fallback (e.g. linux-hardened), but we ship it the
+  # way upstream and every Chromium-based package does. The tarball
+  # already carries this mode; setting it explicitly documents that the
+  # setuid bit is intentional.
+  chmod 4755 "$pkgdir/usr/lib/claude-desktop/chrome-sandbox"
 
-package() {
-  cp -a data/. "$pkgdir"
-
-  # Everything in the app directory except resources/ is the bundled
-  # Electron runtime (including its chrome-sandbox helper); the system
-  # Electron replaces it. The launcher takes the old binary's place, so
-  # the /usr/bin/claude-desktop symlink from the .deb still resolves.
-  find "$pkgdir/usr/lib/claude-desktop" -mindepth 1 -maxdepth 1 \
-    ! -name resources -exec rm -r {} +
-  install -m755 "${pkgname}.sh" "$pkgdir/usr/lib/claude-desktop/claude-desktop"
+  # Upstream provides a symlink /usr/bin/claude-desktop -> ../lib/claude-desktop/claude-desktop.
+  # Replace it with our launcher wrapper so user flags from
+  # ~/.config/claude-desktop-flags.conf are passed to the bundled binary.
+  rm "$pkgdir/usr/bin/claude-desktop"
+  install -m755 "${pkgname}.sh" "$pkgdir/usr/bin/claude-desktop"
 
   # lintian is Debian's package linter; its override file has no
   # consumer on Arch.

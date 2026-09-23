@@ -2,51 +2,56 @@
 
 pkgname=antigravity
 pkgver=2.16.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Google Antigravity 2.0 multi-agent orchestration platform'
 arch=('x86_64')
 url=https://antigravity.google/product/antigravity-2
 license=(LicenseRef-Google-Antigravity)
 depends=(
-  'electron'
-  'glibc'
+  'alsa-lib'
+  'at-spi2-core'
+  'cairo'
+  'dbus'
+  'expat'
+  'glib2'
+  'gtk3'
+  'libcups'
+  'libx11'
+  'libxcb'
+  'libxcomposite'
+  'libxdamage'
+  'libxext'
+  'libxfixes'
+  'libxkbcommon'
+  'libxrandr'
+  'mesa'
+  'nspr'
+  'nss'
+  'pango'
+  'systemd-libs'
 )
-makedepends=('asar')
 options=(!strip !debug)
 _build=4917332007583744
 source=(
   "${pkgname}.desktop"
   "${pkgname}.png"
   "${pkgname}.sh"
-  "Antigravity-${pkgver}-x86_64.tar.gz::https://storage.googleapis.com/antigravity-public/antigravity-hub/${pkgver}-${_build}/linux-x64/Antigravity.tar.gz"
+  "Antigravity-${pkgver}-$CARCH.tar.gz::https://storage.googleapis.com/antigravity-public/antigravity-hub/${pkgver}-${_build}/linux-x64/Antigravity.tar.gz"
 )
 b2sums=('ec2c74f0e6f2458f2ef1c67b1321c058a3f7c422e364d8871a0a933220ec52ee5736e449cb797b6f135cff1f4adfe6f81e0fdbc76d3ec67c245aea002b8577d8'
         '772849ebf4574dccc7d2fc30751baed10b4a5d4091c524f3d69938192387693501c0c54ea5b43fa2ed382f70ecdff369a4c65ce3d0f778c68712fa0c2b5e84b8'
-        'ac6483c1d01e1c5c366ee7cfa071ed2a85b834cce3898082c6979587792621f88b9c6845f53707e9ae9d0435cb4c9ca48f01a7eaab4b70f6d29c08b5473a591a'
+        '9c052bbff1cb80f5e528451cf316273f693749813520410239e728eec17809e96ea728755bb25279074660a53db07363790c61775a28dd594b57a0d1028ffbff'
         '1f5d1bb35dbfe8dcb87eeb7ffcf44876d34dc0584bfdb6e4dc80044cf7405a421f33990b6673084fb0b6a3b5f1f994e645dce57375fbf82f3c6c31885aa6b586')
 
-prepare() {
-    cd Antigravity-*/resources
-
-    # The app finds its bundled files (bin/language_server, app-update.yml,
-    # app.asar.unpacked) through process.resourcesPath, which points at the
-    # system Electron's own resources directory instead. Hardcode the real
-    # location.
-    rm -rf "$srcdir/app"
-    asar extract app.asar "$srcdir/app"
-    grep -rlZ --include='*.js' 'process\.resourcesPath' "$srcdir/app" |
-        xargs -0 -r sed -i 's|process\.resourcesPath|"/opt/Antigravity/resources"|g'
-    rm -r app.asar app.asar.unpacked
-    asar pack "$srcdir/app" app.asar --unpack-dir node_modules/chrome-devtools-mcp
-}
-
 package() {
-    # Only the app's resources are installed; the bundled Electron runtime
-    # around them is replaced by the system one.
-    install -d "$pkgdir/opt/Antigravity"
-    cp -a Antigravity-*/resources "$pkgdir/opt/Antigravity/"
+    install -d "$pkgdir/opt"
+    cp -a Antigravity-*/ "$pkgdir/opt/Antigravity"
 
     install -Dm755 "${pkgname}.sh" "$pkgdir/usr/bin/$pkgname"
+
+    install -d "$pkgdir/usr/share/licenses/$pkgname"
+    ln -s /opt/Antigravity/LICENSE.electron.txt -t "$pkgdir/usr/share/licenses/$pkgname"
+    ln -s /opt/Antigravity/LICENSES.chromium.html -t "$pkgdir/usr/share/licenses/$pkgname"
 
     install -Dm644 "${pkgname}.desktop" -t "$pkgdir/usr/share/applications"
     install -Dm644 "${pkgname}.png" -t "$pkgdir/usr/share/pixmaps"
