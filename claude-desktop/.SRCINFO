@@ -1,6 +1,6 @@
 pkgbase = claude-desktop
 	pkgdesc = Official Claude AI desktop app from Anthropic — Chat, Cowork, and Claude Code
-	pkgver = 2.2553.1
+	pkgver = 2.2553.13
 	pkgrel = 1
 	url = https://claude.com/download
 	arch = x86_64
@@ -29,9 +29,9 @@ pkgbase = claude-desktop
 	conflicts = claude-desktop-bin
 	options = !strip
 	options = !debug
-	source = https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_2.2553.1_amd64.deb
+	source = https://downloads.claude.ai/claude-desktop/apt/stable/pool/main/c/claude-desktop/claude-desktop_2.2553.13_amd64.deb
 	source = claude-desktop.sh
-	sha256sums = 6700fdd84e77a6b8c93912c2f69eb5d1e40fa99bcd9d37f438f809ef2a6fe6f8
+	sha256sums = 02a95a9d133472c1b773c8e9dbdee56681b8164500178083bd8b53b9d11d109f
 	sha256sums = 42d7679e68da6143f2b1460114a368fb58ad298df700740cf6efa2ff3227503d
 
 pkgname = claude-desktop
