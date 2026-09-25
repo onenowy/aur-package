@@ -1,6 +1,6 @@
 pkgbase = microsoft-edge
 	pkgdesc = A browser that combines a minimal design with sophisticated technology to make the web faster, safer, and easier
-	pkgver = 153.0.4234.48
+	pkgver = 154.0.4258.37
 	pkgrel = 1
 	url = https://www.microsoftedgeinsider.com/en-us/download
 	arch = x86_64
@@ -39,9 +39,9 @@ pkgbase = microsoft-edge
 	optdepends = upower: Battery Status API support
 	options = !strip
 	options = !zipman
-	source = https://packages.microsoft.com/yumrepos/edge/Packages/m/microsoft-edge-stable-153.0.4234.48-1.x86_64.rpm
+	source = https://packages.microsoft.com/yumrepos/edge/Packages/m/microsoft-edge-stable-154.0.4258.37-1.x86_64.rpm
 	source = microsoft-edge.sh
-	sha256sums = 1f6cbb4a757c3bcb48e2b100db5ff7ab5255d450618b0919748518a723129e90
+	sha256sums = bb5d0ae05c65d73908bb8ed326bc9b14e9ddc737262d53469e31a7509bc3da17
 	sha256sums = 6b11bfece9162a8ad4d45c29b2f44dc1fc1db8853c9ed81823f51f61193d15e5
 
 pkgname = microsoft-edge
