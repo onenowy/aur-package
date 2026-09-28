@@ -46,7 +46,7 @@ depends=(
   'pango'
   'systemd-libs'
   'tar'
-  'vulkan-swrast'
+  'vulkan-driver'
   'xdg-utils'
   'xz'
 )
