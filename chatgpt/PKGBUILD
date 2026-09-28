@@ -1,9 +1,9 @@
 # Maintainer: Akira <akira.uestc at gmail dot com>
-# Releases (x86_64): https://persistent.oaistatic.com/codex-app-prod/linux/arch/x86_64/openai-chatgpt.db
+# Releases (x86_64): https://persistent.oaistatic.com/codex-app-prod/linux/rpm/x86_64/repodata/repomd.xml
 
 pkgname=chatgpt
 pkgver=26.924.22138
-pkgrel=1
+pkgrel=2
 pkgdesc="Official ChatGPT desktop application for Linux"
 arch=('x86_64')
 url="https://chatgpt.com/download"
@@ -12,7 +12,6 @@ options=('!strip' '!debug')
 provides=('chatgpt-desktop')
 conflicts=('chatgpt-desktop' 'chatgpt-bin')
 
-# Mirrors the dependencies of OpenAI's own Arch package (chatgpt-bin).
 depends=(
   'alsa-lib'
   'at-spi2-core'
@@ -65,20 +64,12 @@ optdepends=(
 backup=('etc/apparmor.d/chatgpt')
 install="${pkgname}.install"
 
-# OpenAI's Arch package, from the versioned release path of its pacman
-# repository so older releases stay downloadable. Upstream publishes pkgrel 1
-# (its installer hardcodes it too). The local file name must not end in
-# .pkg.tar.zst: the CI build script uploads every *.pkg.tar.zst it finds in
-# the package directory.
-source=("${pkgname}-${pkgver}-x86_64.tar.zst::https://persistent.oaistatic.com/codex-app-prod/linux/arch/${pkgver}/x86_64/chatgpt-bin-${pkgver}-1-x86_64.pkg.tar.zst"
+source=("${pkgname}-${pkgver}-1.x86_64.rpm::https://persistent.oaistatic.com/codex-app-prod/linux/rpm/x86_64/chatgpt-${pkgver}-1.x86_64.rpm"
         "${pkgname}.sh")
-sha256sums=('e5e084b26f43845f8f3b09b48048ec46c22e70334a3e903274dcaa4cd7682fe8'
+sha256sums=('c36c14af21c67465dcef6d647e717aed2e1fc186a18a4acb82db7ca777a233c9'
             '5a85913807fd810bbc52796e0b0b52f42deaa541181d9848cf1886694ebafbde')
 
 package() {
-  # Only the package payload is used. Its .INSTALL (extracted next to it)
-  # registers OpenAI's pacman repository and signing key, which does not
-  # apply to this rebuilt package.
   cp --parents -a {etc,usr} "$pkgdir"
 
   # ChatGPT runs on OpenAI's own "Owl" Chromium shell, which refuses stock
@@ -88,13 +79,12 @@ package() {
   rm "${pkgdir}/usr/bin/chatgpt"
   install -m755 "${pkgname}.sh" "${pkgdir}/usr/bin/chatgpt"
 
-  # Upstream installs its license under its own package name.
-  mv "${pkgdir}/usr/share/licenses/chatgpt-bin" \
-    "${pkgdir}/usr/share/licenses/${pkgname}"
   install -Dm644 "${pkgdir}/usr/share/doc/chatgpt/copyright" \
     "${pkgdir}/usr/share/licenses/${pkgname}/copyright"
+  ln -s /usr/lib/chatgpt/LICENSE \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
   ln -s /usr/lib/chatgpt/LICENSES.chromium.html \
     "${pkgdir}/usr/share/licenses/${pkgname}/LICENSES.chromium.html"
 
-  rm -r "${pkgdir}/usr/share/doc" "${pkgdir}/usr/share/lintian"
+  rm -rf "${pkgdir}/usr/share/doc"
 }
