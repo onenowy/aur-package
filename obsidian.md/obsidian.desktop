@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Obsidian
-Exec=/usr/bin/obsidian %U
+Exec=/opt/obsidian/obsidian %U
 Terminal=false
 Type=Application
 Icon=obsidian

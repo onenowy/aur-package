@@ -5,14 +5,13 @@
 pkgname=obsidian.md
 _pkgname=obsidian
 pkgver=1.13.7
-pkgrel=3
+pkgrel=4
 pkgdesc="A powerful knowledge base that works on top of a local folder of plain text Markdown files (using bundled Electron)"
 arch=('x86_64')
 url="https://obsidian.md"
 license=('LicenseRef-Obsidian')
 depends=(
   'alsa-lib'
-  'bash'
   'fontconfig'
   'gtk3'
   'hicolor-icon-theme'
@@ -23,22 +22,16 @@ depends=(
 )
 provides=("${_pkgname}")
 conflicts=("${_pkgname}")
-install=obsidian.install
 options=(!strip)
-source=("obsidian.sh"
-        "obsidian.desktop"
+source=("obsidian.desktop"
         "LICENSE-Obsidian"
         "https://github.com/obsidianmd/obsidian-releases/releases/download/v${pkgver}/obsidian-${pkgver}.tar.gz")
-sha256sums=('a4f5cf374a88b686e0680532fdac2008fada514e2c2666f6cee88ff3c2dcd481'
-            '99c075af3f34cb358d6e93565686792c45562b17f8002fce0e8a63b83cbbe786'
+sha256sums=('e601bf939d89d46ea4c0a7ba4b3f42513c8f32c9b984e61e372cb24b07e73a31'
             'd9fdc14f9c2fb95bb38310281268fdad413c1b49fa93213df3184f9b0ca1175c'
             'd3cbe375cbfa4024db1910b98191649f4134c5c48aee5e60b6e7713987dcdb28')
 
 package() {
     cd "$srcdir"
-
-    # Install executable launcher script
-    install -Dm755 "${_pkgname}.sh" "$pkgdir"/usr/bin/obsidian
 
     # Install desktop file
     install -Dm644 "${_pkgname}.desktop" -t "$pkgdir"/usr/share/applications/

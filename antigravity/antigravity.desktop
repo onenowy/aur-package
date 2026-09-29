@@ -2,7 +2,7 @@
 Name=Antigravity
 Comment=Experience liftoff
 GenericName=Agentic Platform
-Exec=/usr/bin/antigravity %U
+Exec=/opt/Antigravity/antigravity %U
 Icon=antigravity
 Type=Application
 StartupNotify=false

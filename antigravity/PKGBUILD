@@ -2,7 +2,7 @@
 
 pkgname=antigravity
 pkgver=2.17.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Google Antigravity 2.0 multi-agent orchestration platform'
 arch=('x86_64')
 url=https://antigravity.google/product/antigravity-2
@@ -35,19 +35,15 @@ _build=5217732355031040
 source=(
   "${pkgname}.desktop"
   "${pkgname}.png"
-  "${pkgname}.sh"
   "Antigravity-${pkgver}-$CARCH.tar.gz::https://storage.googleapis.com/antigravity-public/antigravity-hub/${pkgver}-${_build}/linux-x64/Antigravity.tar.gz"
 )
-b2sums=('ec2c74f0e6f2458f2ef1c67b1321c058a3f7c422e364d8871a0a933220ec52ee5736e449cb797b6f135cff1f4adfe6f81e0fdbc76d3ec67c245aea002b8577d8'
+b2sums=('b1d98649c1aee3df87511303e3f88e1c214defba1d4b3b867bfc839c9c99fc8a4399e404a3c82677cbd0b5ea4cc099741474eacd3029afc6f626de03081267aa'
         '772849ebf4574dccc7d2fc30751baed10b4a5d4091c524f3d69938192387693501c0c54ea5b43fa2ed382f70ecdff369a4c65ce3d0f778c68712fa0c2b5e84b8'
-        '9c052bbff1cb80f5e528451cf316273f693749813520410239e728eec17809e96ea728755bb25279074660a53db07363790c61775a28dd594b57a0d1028ffbff'
         'd759078b2e347b5c4cf3ed0386a1dc9dce9cf40a76e6f12db85e834143ca462c4f9bc2ebc14aa9514ab5c4df5f1e82746f0f98d329865481e49d127897f025a9')
 
 package() {
     install -d "$pkgdir/opt"
     cp -a Antigravity-*/ "$pkgdir/opt/Antigravity"
-
-    install -Dm755 "${pkgname}.sh" "$pkgdir/usr/bin/$pkgname"
 
     install -d "$pkgdir/usr/share/licenses/$pkgname"
     ln -s /opt/Antigravity/LICENSE.electron.txt -t "$pkgdir/usr/share/licenses/$pkgname"

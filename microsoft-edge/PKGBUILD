@@ -5,7 +5,7 @@
 pkgname=microsoft-edge
 _pkgshortname=msedge
 pkgver=154.0.4258.37
-pkgrel=1
+pkgrel=2
 pkgdesc="A browser that combines a minimal design with sophisticated technology to make the web faster, safer, and easier"
 arch=('x86_64')
 url="https://www.microsoftedgeinsider.com/en-us/download"
@@ -46,10 +46,8 @@ optdepends=('pipewire: WebRTC desktop sharing under Wayland'
             'org.freedesktop.secrets: password storage backend on GNOME / Xfce / Plasma'
             'upower: Battery Status API support')
 options=(!strip !zipman)
-source=("https://packages.microsoft.com/yumrepos/edge/Packages/m/${pkgname}-stable-${pkgver}-1.x86_64.rpm"
-        "microsoft-edge.sh")
-sha256sums=('bb5d0ae05c65d73908bb8ed326bc9b14e9ddc737262d53469e31a7509bc3da17'
-            '6b11bfece9162a8ad4d45c29b2f44dc1fc1db8853c9ed81823f51f61193d15e5')
+source=("https://packages.microsoft.com/yumrepos/edge/Packages/m/${pkgname}-stable-${pkgver}-1.x86_64.rpm")
+sha256sums=('bb5d0ae05c65d73908bb8ed326bc9b14e9ddc737262d53469e31a7509bc3da17')
 
 package() {
 
@@ -61,9 +59,6 @@ package() {
 		install -Dm644 "${pkgdir}/opt/microsoft/${_pkgshortname}/product_logo_${res}.png" \
 			"${pkgdir}/usr/share/icons/hicolor/${res}x${res}/apps/${pkgname}.png"
 	done
-       # User flag aware launcher
-       install -m755 microsoft-edge.sh "${pkgdir}/usr/bin/microsoft-edge"
-       ln -sf microsoft-edge "${pkgdir}/usr/bin/microsoft-edge-stable"
 
        rm "${pkgdir}/opt/microsoft/${_pkgshortname}"/product_logo_*.png
 
