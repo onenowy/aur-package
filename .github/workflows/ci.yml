@@ -19,10 +19,10 @@ jobs:
   check-and-build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install Dependencies
-        run: sudo apt-get install -y python3-pip jq && pip install 'nvchecker[rpmrepo,aur,github]'
+        run: sudo apt-get install -y python3-pip jq && pip install 'nvchecker[rpmrepo,jq]'
 
       - name: Check for Updates
         id: check

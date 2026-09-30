@@ -20,16 +20,16 @@ cmd = "curl -s 'https://update.code.visualstudio.com/api/update/linux-x64/stable
 # use_latest_release = true
 # prefix = "v"
 
-[obsidian.md]
-source = "github"
-github = "obsidianmd/obsidian-releases"
-use_latest_release = true
+["obsidian.md"]
+source = "jq"
+url = "https://api.github.com/repos/obsidianmd/obsidian-releases/releases"
+filter = '.[] | select(.draft == false and .prerelease == false) | .tag_name as $tag | select(any(.assets[]; .name == ("obsidian-" + ($tag | ltrimstr("v")) + ".tar.gz"))) | $tag'
 prefix = "v"
 
 [antigravity]
-source = "regex"
-url = "https://antigravity.google/changelog"
-regex = 'href="/releases\?tab=hub&amp;version=([\d\.]+)"'
+source = "jq"
+url = "https://antigravity-hub-auto-updater-974169037036.us-central1.run.app/releases"
+filter = '.[].version'
 
 [claude-desktop]
 source = "apt"
