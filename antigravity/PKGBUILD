@@ -1,7 +1,7 @@
 # Maintainer: AlphaLynx <alphalynx at alphalynx dot dev>
 
 pkgname=antigravity
-pkgver=2.18.1
+pkgver=2.19.1
 pkgrel=1
 pkgdesc='Google Antigravity 2.0 multi-agent orchestration platform'
 arch=('x86_64')
@@ -31,7 +31,7 @@ depends=(
   'systemd-libs'
 )
 options=(!strip !debug)
-_build=4945794252537856
+_build=6046815158665216
 source=(
   "${pkgname}.desktop"
   "${pkgname}.png"
@@ -39,7 +39,7 @@ source=(
 )
 b2sums=('b1d98649c1aee3df87511303e3f88e1c214defba1d4b3b867bfc839c9c99fc8a4399e404a3c82677cbd0b5ea4cc099741474eacd3029afc6f626de03081267aa'
         '772849ebf4574dccc7d2fc30751baed10b4a5d4091c524f3d69938192387693501c0c54ea5b43fa2ed382f70ecdff369a4c65ce3d0f778c68712fa0c2b5e84b8'
-        'd7688d35e28062c32d9219609e0fc233090877fb1cc0f824a32cd164e80ab26f938dda83d0cf71bf902191734b097b178d4d4c259bb24030812af9e22e56efdc')
+        'c7fd57fec5962f988e05084946a6b7f278f5c8ecaa38733b69f3cb30947589a021ae7a96b8a6c97bb80147b3dee2b17146009596590773bc37913bd749275898')
 
 package() {
     install -d "$pkgdir/opt"
