@@ -8,7 +8,7 @@
 
 pkgname=claude-desktop
 pkgver=2.19675.1
-pkgrel=1
+pkgrel=2
 pkgdesc="Official Claude AI desktop app from Anthropic — Chat, Cowork, and Claude Code"
 arch=('x86_64')
 url="https://claude.com/download"
@@ -38,6 +38,7 @@ depends=('alsa-lib'
          'libcap-ng'
          'libcups'
          'libnotify'
+         'libpipewire'
          'libseccomp'
          'libsecret'
          'libx11'
@@ -63,6 +64,7 @@ optdepends=('edk2-ovmf: UEFI firmware for Cowork VM sandbox'
             'libayatana-appindicator: system tray icon'
             'qemu-system-x86: QEMU hypervisor for Cowork VM sandbox'
             'virtiofsd: host directory sharing for Cowork VM sandbox'
+            'xdg-desktop-portal-gnome: portal backend for GNOME'
             'xdg-desktop-portal-gtk: portal backend for GTK desktops'
             'xdg-desktop-portal-kde: portal backend for KDE Plasma')
 

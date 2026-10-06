@@ -5,11 +5,11 @@
 pkgname=microsoft-edge
 _pkgshortname=msedge
 pkgver=154.0.4258.62
-pkgrel=1
+pkgrel=2
 pkgdesc="A browser that combines a minimal design with sophisticated technology to make the web faster, safer, and easier"
 arch=('x86_64')
 url="https://www.microsoftedgeinsider.com/en-us/download"
-license=('custom')
+license=('LicenseRef-Microsoft-Edge')
 depends=(
   'alsa-lib'
   'at-spi2-core'
@@ -37,19 +37,25 @@ depends=(
   'pango'
   'systemd-libs'
   'util-linux-libs'
+  'xdg-utils'
 )
 
 optdepends=('pipewire: WebRTC desktop sharing under Wayland'
             'kdialog: support for native dialogs in Plasma'
             'gtk4: for --gtk-version=4 (GTK4 IME might work better on Wayland)'
+            'qt5-base: for Qt5 integration'
             'qt6-base: for Qt6 integration'
             'org.freedesktop.secrets: password storage backend on GNOME / Xfce / Plasma'
             'upower: Battery Status API support')
 options=(!strip !zipman)
-source=("https://packages.microsoft.com/yumrepos/edge/Packages/m/${pkgname}-stable-${pkgver}-1.x86_64.rpm")
-sha256sums=('3b4ca48e5edce090d259bb5dada8061a08606fc555f26cbb0305cc49f3609d28')
+source=("https://packages.microsoft.com/yumrepos/edge/Packages/m/${pkgname}-stable-${pkgver}-1.x86_64.rpm"
+        "LICENSE-Microsoft-Edge")
+sha256sums=('3b4ca48e5edce090d259bb5dada8061a08606fc555f26cbb0305cc49f3609d28'
+            '468010235556ef2dd6a88680c0bdf4af1f8b72393dc4d6aa1faf62bcb4218e75')
 
 package() {
+
+	install -Dm644 "$srcdir/LICENSE-Microsoft-Edge" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 
 	cp --parents -a {opt,usr} "$pkgdir"
 	# suid sandbox
@@ -62,6 +68,4 @@ package() {
 
        rm "${pkgdir}/opt/microsoft/${_pkgshortname}"/product_logo_*.png
 
-       rm -f "${pkgdir}/usr/share/applications/com.microsoft.Edge.desktop"
-       mv "${pkgdir}/usr/share/applications/microsoft-edge.desktop" "${pkgdir}/usr/share/applications/com.microsoft.Edge.desktop"
 }

@@ -1,10 +1,10 @@
 pkgbase = microsoft-edge
 	pkgdesc = A browser that combines a minimal design with sophisticated technology to make the web faster, safer, and easier
 	pkgver = 154.0.4258.62
-	pkgrel = 1
+	pkgrel = 2
 	url = https://www.microsoftedgeinsider.com/en-us/download
 	arch = x86_64
-	license = custom
+	license = LicenseRef-Microsoft-Edge
 	depends = alsa-lib
 	depends = at-spi2-core
 	depends = cairo
@@ -31,15 +31,19 @@ pkgbase = microsoft-edge
 	depends = pango
 	depends = systemd-libs
 	depends = util-linux-libs
+	depends = xdg-utils
 	optdepends = pipewire: WebRTC desktop sharing under Wayland
 	optdepends = kdialog: support for native dialogs in Plasma
 	optdepends = gtk4: for --gtk-version=4 (GTK4 IME might work better on Wayland)
+	optdepends = qt5-base: for Qt5 integration
 	optdepends = qt6-base: for Qt6 integration
 	optdepends = org.freedesktop.secrets: password storage backend on GNOME / Xfce / Plasma
 	optdepends = upower: Battery Status API support
 	options = !strip
 	options = !zipman
 	source = https://packages.microsoft.com/yumrepos/edge/Packages/m/microsoft-edge-stable-154.0.4258.62-1.x86_64.rpm
+	source = LICENSE-Microsoft-Edge
 	sha256sums = 3b4ca48e5edce090d259bb5dada8061a08606fc555f26cbb0305cc49f3609d28
+	sha256sums = 468010235556ef2dd6a88680c0bdf4af1f8b72393dc4d6aa1faf62bcb4218e75
 
 pkgname = microsoft-edge
