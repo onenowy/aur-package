@@ -37,9 +37,9 @@ optdepends=('libdbusmenu-glib: Needed for KDE global menu'
             'org.freedesktop.secrets: Needed for settings sync'
             'icu: Needed for live share'
             'webkit2gtk-4.1: Native Microsoft authentication')
-source=(code-${pkgver}.desktop.in::https://raw.githubusercontent.com/microsoft/vscode/${pkgver}/resources/linux/code.desktop
-        code-${pkgver}-url-handler.desktop.in::https://raw.githubusercontent.com/microsoft/vscode/${pkgver}/resources/linux/code-url-handler.desktop
-        code-${pkgver}-workspace.xml.in::https://raw.githubusercontent.com/microsoft/vscode/${pkgver}/resources/linux/code-workspace.xml
+source=(code-${pkgver}.desktop.in::https://raw.githubusercontent.com/microsoft/vscode/main/resources/linux/code.desktop
+        code-${pkgver}-url-handler.desktop.in::https://raw.githubusercontent.com/microsoft/vscode/main/resources/linux/code-url-handler.desktop
+        code-${pkgver}-workspace.xml.in::https://raw.githubusercontent.com/microsoft/vscode/main/resources/linux/code-workspace.xml
         code_x64_${pkgver}.tar.gz::https://update.code.visualstudio.com/${pkgver}/linux-x64/stable)
 sha256sums=('2b36d3a8c70fcead5258dd0855be0782305b23a00448f0eef11ee4ea462193a0'
             'c361efa7e02fcad759ed80d2fbab67877f33219b981578af6fffaf18aeb12d9b'
