@@ -1,6 +1,6 @@
 pkgbase = antigravity
 	pkgdesc = Google Antigravity 2.0 multi-agent orchestration platform
-	pkgver = 2.28.0
+	pkgver = 2.28.1
 	pkgrel = 1
 	url = https://antigravity.google/product/antigravity-2
 	arch = x86_64
@@ -34,11 +34,11 @@ pkgbase = antigravity
 	source = antigravity.png
 	source = LICENSE-Google-Antigravity
 	source = LICENSE-Google
-	source = Antigravity-2.28.0-x86_64.tar.gz::https://storage.googleapis.com/antigravity-public/antigravity-hub/2.28.0-6410674700681216/linux-x64/Antigravity.tar.gz
+	source = Antigravity-2.28.1-x86_64.tar.gz::https://storage.googleapis.com/antigravity-public/antigravity-hub/2.28.1-6709500728705024/linux-x64/Antigravity.tar.gz
 	b2sums = d6b8bf07eaeab9804e8ef82398b366d34b419287f1a2302c7764bf547a7763d1d0877bd78a29c83f8e0974659e1fc01fea674eca7e948623f92631426b198419
 	b2sums = 772849ebf4574dccc7d2fc30751baed10b4a5d4091c524f3d69938192387693501c0c54ea5b43fa2ed382f70ecdff369a4c65ce3d0f778c68712fa0c2b5e84b8
 	b2sums = 0458a8972be0af6f6d8c90334c5f8ddf9d2b1d2b172cabc2f7d7a4486060019f5814e2f60ecccd5b9be3cc105d4a8a041b8e64fbd2a297a89880e7764eadcfd0
 	b2sums = 9ff8179af8f300810c8f3e72817ce69c0fb7719a46ae1523c95b9a56a92bde0ee0b1aef0f81d789e54918a48e144fa1a33622194c806fe93bbfcf7606dc5c36c
-	b2sums = 6e59a531b85ab8ddedbb940c9919dd3cd613d187d0f1b5385b35fe5516e2176b460d2675dbb30ad67fc736d4667ed05f0f6f085b5273f20641e0e109c61161f1
+	b2sums = dd2e4c12dec9cdc599d61dc99f1e983ebd651339f530bcec45d5a3c112892076ffe5193d8bdce57845c837e1e6eb0985860d22a4e2a403095a8d938d6940dc24
 
 pkgname = antigravity
