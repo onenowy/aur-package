@@ -1,7 +1,7 @@
 # Maintainer: AlphaLynx <alphalynx at alphalynx dot dev>
 
 pkgname=antigravity
-pkgver=2.33.0
+pkgver=2.34.0
 pkgrel=1
 pkgdesc='Google Antigravity 2.0 multi-agent orchestration platform'
 arch=('x86_64')
@@ -33,7 +33,7 @@ depends=(
   'xdg-utils'
 )
 options=(!strip !debug)
-_build=4731201358004224
+_build=5887025308631040
 source=(
   "${pkgname}.desktop"
   "${pkgname}.png"
@@ -45,7 +45,7 @@ b2sums=('d6b8bf07eaeab9804e8ef82398b366d34b419287f1a2302c7764bf547a7763d1d0877bd
         '772849ebf4574dccc7d2fc30751baed10b4a5d4091c524f3d69938192387693501c0c54ea5b43fa2ed382f70ecdff369a4c65ce3d0f778c68712fa0c2b5e84b8'
         '0458a8972be0af6f6d8c90334c5f8ddf9d2b1d2b172cabc2f7d7a4486060019f5814e2f60ecccd5b9be3cc105d4a8a041b8e64fbd2a297a89880e7764eadcfd0'
         '9ff8179af8f300810c8f3e72817ce69c0fb7719a46ae1523c95b9a56a92bde0ee0b1aef0f81d789e54918a48e144fa1a33622194c806fe93bbfcf7606dc5c36c'
-        '09d4fd452b9541877a591ca7ac685b43ec226d2f449c1ad6f1b9b4d0bf8c514dbb96ae8c267eea37e2d7208b823fcbd9f0f2cc1580b0fea3379b9c73b2740622')
+        '34dfc4cb8caba43a60d1f395a3b70bc79c3946ea8f865b955df4ce9d00b5bebdbc12032346b191c2bc70b42db502aba73c3e1e6dd9e9763bb97d65ddbb735cbe')
 
 package() {
     install -d "$pkgdir/opt"
