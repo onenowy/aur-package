@@ -2,43 +2,29 @@ name: Check Orphaned Packages
 
 on:
   workflow_dispatch:
+    inputs:
+      apply:
+        description: 'Apply removals (unchecked previews the plan)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: x86_64-release
+  cancel-in-progress: false
 
 permissions:
   contents: write
 
 jobs:
   check-orphans:
+    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-
-      - name: Check Orphaned Packages
-        id: orphan_cleanup
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+      - name: Check for Unreferenced Packages
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          chmod +x ./scripts/check-orphans.sh
-          ./scripts/check-orphans.sh >> "$GITHUB_OUTPUT"
-
-      - name: Remove Orphaned Packages from Database
-        if: steps.orphan_cleanup.outputs.ORPHANS_REMOVED == 'true'
-        run: |
-          chmod +x ./scripts/manage-db.sh
-          docker run --rm -v $PWD:/repo archlinux:base-devel /bin/bash -c "
-            cd /repo/release_dist
-            /bin/bash /repo/scripts/manage-db.sh remove
-          "
-
-      - name: Upload Updated Database
-        if: steps.orphan_cleanup.outputs.ORPHANS_REMOVED == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          shopt -s nullglob
-          files=(release_dist/*)
-          if [ ${#files[@]} -gt 0 ]; then
-            echo "Uploading updated database..."
-            gh release upload x86_64 release_dist/* --clobber
-          else
-            echo "No files to upload."
-          fi
+          APPLY_REMOVALS: ${{ inputs.apply }}
+        run: bash scripts/release.sh prune "$APPLY_REMOVALS"

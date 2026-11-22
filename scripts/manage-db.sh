@@ -2,11 +2,10 @@
 # Consolidated script for Arch Linux Repository Database management
 # Handles adding built packages and removing orphaned ones.
 
-set -eu
+set -euo pipefail
 
 ACTION=${1:-"update"} # update (add new pkgs) or remove (using pkgs_to_remove.txt)
 DB_NAME="shelter-arch-aur.db.tar.gz"
-FILES_DB="shelter-arch-aur.files.tar.gz"
 
 echo ">> Database Management: Action=$ACTION" >&2
 
@@ -17,9 +16,10 @@ case "$ACTION" in
     if [ ${#pkgs[@]} -gt 0 ]; then
       echo ":: Adding/Updating ${#pkgs[@]} packages in $DB_NAME..." >&2
       # We removed -n to ensure metadata (size/checksums) is refreshed for updates
-      repo-add "$DB_NAME" "${pkgs[@]}"
+      repo-add --prevent-downgrade "$DB_NAME" "${pkgs[@]}"
     else
       echo ":: No .pkg.tar.zst files found to add." >&2
+      exit 1
     fi
     ;;
 
@@ -28,7 +28,7 @@ case "$ACTION" in
       mapfile -t to_remove < <(sort -u pkgs_to_remove.txt)
       if [ ${#to_remove[@]} -gt 0 ]; then
         echo ":: Removing ${#to_remove[@]} packages from $DB_NAME..." >&2
-        repo-remove "$DB_NAME" "${to_remove[@]}" || true
+        repo-remove "$DB_NAME" "${to_remove[@]}"
       fi
       rm "pkgs_to_remove.txt"
     else
@@ -42,16 +42,8 @@ case "$ACTION" in
     ;;
 esac
 
-# ------------------------------------------------------------------------------
-# Finalize: Convert symlinks created by repo-add/remove to regular files
-# This prevents "same file" errors and ensures pacman downloads the actual DB
-# ------------------------------------------------------------------------------
+# GitHub release assets need regular files, rather than repo-add symlinks.
 for base in "shelter-arch-aur.db" "shelter-arch-aur.files"; do
-  if [ -L "$base" ] || [ -f "$base" ]; then
-    echo ":: Finalizing $base (converting to regular file)..." >&2
-    rm -f "$base"
-    cp -f "$base.tar.gz" "$base"
-  fi
+  rm -f "$base"
+  cp "$base.tar.gz" "$base"
 done
-
-echo ">> Database management complete." >&2

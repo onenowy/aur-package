@@ -5,20 +5,9 @@ pkg = "microsoft-edge-stable"
 arch = "x86_64"
 
 [visual-studio-code]
-source = "cmd"
-cmd = "curl -s 'https://update.code.visualstudio.com/api/update/linux-x64/stable/latest' | jq -r '.productVersion'"
-
-# [qt-sudo]
-# source = "github"
-# github = "aarnt/qt-sudo"
-# use_latest_release = true
-# prefix = "v"
-
-# [octopi]
-# source = "github"
-# github = "aarnt/octopi"
-# use_latest_release = true
-# prefix = "v"
+source = "jq"
+url = "https://update.code.visualstudio.com/api/update/linux-x64/stable/latest"
+filter = '.productVersion | strings'
 
 ["obsidian.md"]
 source = "jq"
@@ -38,29 +27,3 @@ mirror = "https://downloads.claude.ai/claude-desktop/apt/stable"
 suite = "stable"
 repo = "main"
 arch = "amd64"
-
-# [chatgpt]
-# source = "rpmrepo"
-# repo = "https://persistent.oaistatic.com/codex-app-prod/linux/rpm/x86_64"
-# pkg = "chatgpt"
-# arch = "x86_64"
-
-# [ntfsprogs-plus]
-# source = "github"
-# github = "ntfsprogs-plus/ntfsprogs-plus"
-# use_latest_release = true
-
-# [lm-studio-version]
-# source = "regex"
-# url = "https://lmstudio.ai/download"
-# regex = '\\"linux\\":\{\\"x64\\":\{\\"version\\":\\"([\d\.]+)\\"'
-
-# [lm-studio-build]
-# source = "regex"
-# url = "https://lmstudio.ai/download"
-# regex = '\\"linux\\":\{\\"x64\\":\{\\"version\\":\\"[0-9.]+\\",\\"build\\":\\"([0-9]+)\\"'
-
-# [lm-studio]
-# source = "combiner"
-# from = ["lm-studio-version", "lm-studio-build"]
-# format = "$1.$2"

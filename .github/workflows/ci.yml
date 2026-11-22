@@ -2,7 +2,7 @@ name: Arch Package CI/CD
 
 on:
   schedule:
-    # Run daily at 00:00 UTC
+    # Run daily at 07:00 and 19:00 UTC
     - cron: '0 7,19 * * *'
   workflow_dispatch:
     inputs:
@@ -12,17 +12,29 @@ on:
         default: false
         type: boolean
 
+concurrency:
+  group: x86_64-release
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
 jobs:
   check-and-build:
+    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
 
       - name: Install Dependencies
         run: sudo apt-get install -y python3-pip jq && pip install 'nvchecker[rpmrepo,jq]'
+
+      - name: Fetch Published Database
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/release.sh fetch
 
       - name: Check for Updates
         id: check
@@ -32,10 +44,20 @@ jobs:
           chmod +x ./scripts/update-version.sh
 
           if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.check_for_updates }}" == "true" ]]; then
-            ./scripts/update-version.sh
+            mkdir -p "$RUNNER_TEMP/arch-tools"
+            cat > "$RUNNER_TEMP/arch-tools/vercmp" <<'SH'
+          #!/bin/bash
+          exec docker run --rm archlinux:base-devel /usr/bin/vercmp "$@"
+          SH
+            chmod +x "$RUNNER_TEMP/arch-tools/vercmp"
+            db=
+            if [[ $(cat release_dist/release.json) != null ]]; then
+              db=release_dist/shelter-arch-aur.db.tar.gz
+            fi
+            PATH="$RUNNER_TEMP/arch-tools:$PATH" ./scripts/update-version.sh "$db"
           else
             echo "Manual build mode: Building ALL packages found."
-            ALL_PKGS=$(find . -maxdepth 2 -name PKGBUILD -not -path './scripts/*' -printf '%h\n' | sed 's|./||' | jq -R . | jq -s -c .)
+            ALL_PKGS=$(find . -mindepth 2 -maxdepth 2 -type f -name PKGBUILD -not -path './.*' -not -path './unused/*' -printf '%h\n' | sed 's|^./||' | jq -R . | jq -s -c .)
             
             echo "Detected packages: $ALL_PKGS"
             echo "BUILD_REQUIRED=true" >> "$GITHUB_OUTPUT"
@@ -44,7 +66,6 @@ jobs:
 
       - name: Build Packages
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
-        id: build_step
         uses: docker://archlinux:base-devel
         env:
           PACKAGES: ${{ steps.check.outputs.BUILD_PACKAGES }}
@@ -55,72 +76,38 @@ jobs:
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
         run: sudo chown -R $USER:$USER .
 
-      - name: Commit Changes
+      - name: Build Repository Database
         if: steps.check.outputs.BUILD_REQUIRED == 'true'
+        id: database
+        env:
+          MANUAL_BUILD: ${{ github.event_name == 'workflow_dispatch' && !inputs.check_for_updates }}
+        run: |
+          shopt -s nullglob
+          if [[ "$MANUAL_BUILD" == true && -f release_dist/assets.json ]]; then
+            for package in release_dist/*.pkg.tar.zst; do
+              if jq -e --arg name "${package##*/}" 'any(.[]; .name == $name)' release_dist/assets.json > /dev/null; then
+                echo "Already published: ${package##*/}"
+                rm -- "$package"
+              fi
+            done
+          fi
+          packages=(release_dist/*.pkg.tar.zst)
+          if (( ${#packages[@]} == 0 )); then
+            echo "No new package versions to publish."
+            exit 0
+          fi
+          docker run --rm -v "$PWD:/repo" -w /repo/release_dist archlinux:base-devel bash /repo/scripts/manage-db.sh update
+          echo 'publish=true' >> "$GITHUB_OUTPUT"
+
+      - name: Commit Changes
+        if: steps.database.outputs.publish == 'true'
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "update: packages updated"
           file_pattern: '*/PKGBUILD */.SRCINFO'
 
-      - name: Manage Repository Database
-        if: steps.check.outputs.BUILD_REQUIRED == 'true'
+      - name: Publish Packages and Database
+        if: steps.database.outputs.publish == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # 1. Fetch existing database
-          mkdir -p release_dist
-          echo "Fetching existing database..."
-          gh release download x86_64 -p "shelter-arch-aur.db.tar.gz" -D release_dist || true
-          gh release download x86_64 -p "shelter-arch-aur.files.tar.gz" -D release_dist || true
-
-          # 2. Update Database (using Docker for repo-add tool)
-          chmod +x ./scripts/manage-db.sh
-          docker run --rm -v $PWD:/repo archlinux:base-devel /bin/bash -c "
-            cd /repo/release_dist
-            /bin/bash /repo/scripts/manage-db.sh update
-          "
-
-      # [Maintained] Remove Old Versions of Updated Packages
-      - name: Remove Old Versions
-        if: steps.check.outputs.BUILD_REQUIRED == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          UPDATED_PKGNAMES: ${{ steps.build_step.outputs.UPDATED_PKGNAMES }}
-        run: |
-          echo "Identifying old assets to remove..."
-          gh release view x86_64 --json assets -q '.assets[].name' > current_assets.txt || touch current_assets.txt
-          
-          for pkgname in $UPDATED_PKGNAMES; do
-            echo ":: Processing cleanup for: $pkgname"
-            new_files=$(ls release_dist/${pkgname}-[0-9]*.pkg.tar.zst | xargs -n1 basename)
-            
-            grep "^${pkgname}-[0-9]" current_assets.txt | while read -r asset; do
-              if [[ "$new_files" != *"$asset"* ]]; then
-                 echo "   Deleting old version: $asset"
-                 gh release delete-asset x86_64 "$asset" -y
-              fi
-            done
-          done
-
-      - name: Upload Packages
-        if: steps.check.outputs.BUILD_REQUIRED == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Update tag to latest commit to ensure source code archives are up-to-date
-          git tag -f x86_64
-          git push origin x86_64 --force
-
-          if ! gh release view x86_64 >/dev/null 2>&1; then
-            gh release create x86_64 --title "Arch Linux Repository (x86_64)" --notes "Arch Linux AUR Repository"
-          fi
-
-          # Only upload if there are files to upload
-          shopt -s nullglob
-          files=(release_dist/*)
-          if [ ${#files[@]} -gt 0 ]; then
-            echo "Uploading assets..."
-            gh release upload x86_64 release_dist/* --clobber
-          else
-            echo "No files to upload."
-          fi
+        run: bash scripts/release.sh publish

@@ -1,153 +1,161 @@
 #!/bin/bash
-set -e
+set -euo pipefail
+shopt -s nullglob
 
-# Function to compare Arch Linux versions (including epoch)
-# Returns 0 if $1 > $2, 1 otherwise
-ver_gt() {
-    local v1=$1
-    local v2=$2
-
-    if [ "$v1" = "$v2" ]; then return 1; fi
-
-    # Normalize versions: ensure both have an epoch (default 0)
-    [[ "$v1" != *:* ]] && v1="0:$v1"
-    [[ "$v2" != *:* ]] && v2="0:$v2"
-
-    # Extract Epochs
-    local e1=${v1%%:*}
-    local e2=${v2%%:*}
-
-    if [ "$e1" -gt "$e2" ]; then return 0; fi
-    if [ "$e1" -lt "$e2" ]; then return 1; fi
-
-    # If epochs are equal, compare version-release part using sort -V
-    v1=${v1#*:}
-    v2=${v2#*:}
-    local larger=$(printf '%s\n%s' "$v1" "$v2" | sort -V | tail -n1)
-    if [ "$larger" = "$v1" ]; then return 0; else return 1; fi
+fail() {
+    printf '%s\n' "$*" >&2
+    exit 1
 }
 
-check_package() {
-    local pkgbuild_path=$1
-    local pkg_dir=$(dirname "$pkgbuild_path")
-    
-    # Skip non-package directories
-    if [ "$pkg_dir" = "." ] || [ "$pkg_dir" = "scripts" ]; then return; fi
+[[ $# -eq 1 ]] || fail "Usage: $0 DATABASE_PATH (pass an empty string for a confirmed new release)"
+: "${GITHUB_OUTPUT:?GITHUB_OUTPUT must name the step output file}"
+command -v vercmp >/dev/null || fail "Arch Linux vercmp is required."
 
-    # Read PKGBUILD variables
-    local pkgname=$(grep "^pkgname=" "$pkgbuild_path" | cut -d'=' -f2 | tr -d '"' | tr -d "'")
-    local pkgver=$(grep "^pkgver=" "$pkgbuild_path" | cut -d'=' -f2)
-    local pkgrel=$(grep "^pkgrel=" "$pkgbuild_path" | cut -d'=' -f2)
-    local epoch=$(grep "^epoch=" "$pkgbuild_path" | cut -d'=' -f2 || echo "")
+db_path=$1
+work_dir=$(mktemp -d)
+trap 'rm -rf -- "$work_dir"' EXIT
 
-    if [ -z "$pkgname" ]; then return; fi
-    
-    # --- Check 1: Upstream vs PKGBUILD ---
-    # Extract version from nvchecker log (handle multiple lines/events, take last non-null)
-    local upstream_ver=$(grep "\"name\": \"$pkgname\"" nvchecker.log | jq -r .version | grep -v "null" | tail -n1 || echo "")
+declare -A db_versions=()
+if [[ -n "$db_path" ]]; then
+    [[ -f "$db_path" && -s "$db_path" ]] || fail "Repository database is missing or empty: $db_path"
+    gzip -t -- "$db_path" || fail "Invalid gzip repository database: $db_path"
+    mkdir -- "$work_dir/db"
+    tar -xzf "$db_path" -C "$work_dir/db" || fail "Could not extract repository database: $db_path"
 
-    if [ -n "$upstream_ver" ]; then
-        if ver_gt "$upstream_ver" "$pkgver"; then
-            echo "[$pkgname] Upstream update detected: $pkgver -> $upstream_ver" >&2
-            
-            # Update PKGBUILD
-            sed -i "s/^pkgver=.*/pkgver=${upstream_ver}/" "$pkgbuild_path"
-            sed -i "s/^pkgrel=.*/pkgrel=1/" "$pkgbuild_path"
-            
-            # Run package-specific update script if present (e.g. updating _build or _electron)
-            if [ -f "$pkg_dir/update.sh" ]; then
-                bash "$pkg_dir/update.sh" "$pkgbuild_path" || true
-            fi
-            
-            # Since we updated the PKGBUILD, we definitely need to build.
-            # Skip Check 2 as requested.
-            echo "$pkg_dir"
-            return
-        else
-            echo "[$pkgname] Upstream ($upstream_ver) is not newer than local ($pkgver)." >&2
-        fi
-    fi
+    db_entries=("$work_dir"/db/*)
+    ((${#db_entries[@]} > 0)) || fail "Repository database contains no packages: $db_path"
+    for entry in "${db_entries[@]}"; do
+        desc=$entry/desc
+        [[ -d "$entry" && ! -L "$entry" && -f "$desc" && ! -L "$desc" ]] ||
+            fail "Missing package description in repository database: ${entry##*/}"
 
-    # --- Check 2: PKGBUILD vs Repo Database ---
-    local local_full_ver="${pkgver}-${pkgrel}"
-    if [ -n "$epoch" ]; then
-        local_full_ver="${epoch}:${pkgver}-${pkgrel}"
-    fi
+        metadata=$(awk '
+            { sub(/\r$/, "") }
+            $0 == "%NAME%" {
+                if (++names != 1 || getline != 1) exit 1
+                sub(/\r$/, "")
+                name = $0
+            }
+            $0 == "%VERSION%" {
+                if (++versions != 1 || getline != 1) exit 1
+                sub(/\r$/, "")
+                version = $0
+            }
+            END {
+                if (names != 1 || name !~ /^[a-z0-9@_+][a-z0-9@._+-]*$/ ||
+                    versions != 1 || version !~ /^([0-9]+:)?[^[:space:]\/:%-]+-[0-9]+(\.[0-9]+)?$/) exit 1
+                print name "\t" version
+            }
+        ' "$desc") || fail "Invalid package description in repository database: ${entry##*/}"
 
-    # Get DB version using awk for exact match
-    local db_full_ver=$(awk -v pkg="$pkgname" '$1 == pkg {print $2; exit}' db_versions.txt)
-
-    if [ -z "$db_full_ver" ]; then
-        echo "[$pkgname] Not in database. Marking for build." >&2
-        echo "$pkg_dir"
-    else
-        if ver_gt "$local_full_ver" "$db_full_ver"; then
-            echo "[$pkgname] Local ($local_full_ver) > Repo ($db_full_ver). Marking for build." >&2
-            echo "$pkg_dir"
-        else
-            echo "[$pkgname] Up to date with repo ($db_full_ver)." >&2
-        fi
-    fi
-}
-
-# 1. Run nvchecker (upstream check)
-echo "Running nvchecker..."
-nvchecker -c nvchecker.toml --logger json > nvchecker.log 2>&1 || true
-
-# 2. Get currently released packages from Repo Database
-echo "Fetching repository database..."
-mkdir -p db_tmp
-: > db_versions.txt # Create/Clear file
-
-if gh release download x86_64 -p "shelter-arch-aur.db.tar.gz" -D db_tmp >/dev/null 2>&1; then
-    echo "Database downloaded. Extracting..."
-    tar -xf db_tmp/shelter-arch-aur.db.tar.gz -C db_tmp
-    
-    # Parse desc files for versions
-    find db_tmp -name "desc" | while read -r desc_file; do
-            awk '
-            /%NAME%/ { getline; sub(/\r$/, ""); name=$0 }
-            /%VERSION%/ { getline; sub(/\r$/, ""); version=$0 }
-            END { if(name && version) print name " " version }
-            ' "$desc_file" >> db_versions.txt
+        IFS=$'\t' read -r db_name db_version <<< "$metadata"
+        [[ -z "${db_versions[$db_name]-}" ]] || fail "Duplicate package in repository database: $db_name"
+        db_versions[$db_name]=$db_version
     done
-    
-    entry_count=$(wc -l < db_versions.txt)
-    echo "Parsed $entry_count packages from repository database."
-    if [ "$entry_count" -eq 0 ]; then
-            echo "Warning: Database extracted but no packages found (check db_tmp content)."
-            ls -R db_tmp | head -n 20
-    fi
+    printf 'Read %s packages from the repository database.\n' "${#db_versions[@]}"
 else
-    echo "Warning: Could not download repository database (might not exist yet)."
+    echo "New release confirmed. Starting with an empty repository database."
 fi
 
-BUILD_LIST=()
+echo "Checking upstream versions..."
+if ! nvchecker -c nvchecker.toml --logger json --failures > "$work_dir/nvchecker.log"; then
+    cat "$work_dir/nvchecker.log" >&2
+    fail "Upstream version checks failed."
+fi
 
-echo "Checking local packages..."
+recipe_value() {
+    local value
+    value=$(sed -n "s/^$2=//p" "$1")
+    case "$value" in
+        \'*\') value=${value:1:-1} ;;
+        \"*\") value=${value:1:-1} ;;
+    esac
+    printf '%s\n' "$value"
+}
 
-# Iterate over all directories containing a PKGBUILD
+compare_versions() {
+    local comparison
+    comparison=$(vercmp "$1" "$2") || fail "Could not compare versions $1 and $2."
+    [[ "$comparison" == -1 || "$comparison" == 0 || "$comparison" == 1 ]] ||
+        fail "Unexpected output from vercmp: $comparison"
+    printf '%s\n' "$comparison"
+}
+
+build_list=()
+changed_recipes=()
 for pkgbuild_path in */PKGBUILD; do
-    # Capture output of check_package
-    result=$(check_package "$pkgbuild_path")
-    if [ -n "$result" ]; then
-        BUILD_LIST+=("$result")
+    pkg_dir=${pkgbuild_path%/*}
+    [[ "$pkg_dir" != unused && -f "$pkgbuild_path" && ! -L "$pkgbuild_path" ]] || continue
+
+    pkgname=$(recipe_value "$pkgbuild_path" pkgname)
+    pkgver=$(recipe_value "$pkgbuild_path" pkgver)
+    pkgrel=$(recipe_value "$pkgbuild_path" pkgrel)
+    epoch=$(recipe_value "$pkgbuild_path" epoch)
+    [[ "$pkgname" =~ ^[a-z0-9@_+][a-z0-9@._+-]*$ &&
+       "$pkgver" =~ ^[a-zA-Z0-9._+]+$ &&
+       "$pkgrel" =~ ^[0-9]+(\.[0-9]+)?$ &&
+       ( -z "$epoch" || "$epoch" =~ ^[0-9]+$ ) ]] ||
+        fail "Invalid package name or version in $pkgbuild_path."
+
+    if ! upstream_ver=$(jq -ers --arg name "$pkgname" '
+        map(select(.name == $name and .version != null)) | last | .version | strings
+    ' "$work_dir/nvchecker.log") || [[ ! "$upstream_ver" =~ ^[a-zA-Z0-9._+]+$ ]]; then
+        cat "$work_dir/nvchecker.log" >&2
+        fail "[$pkgname] nvchecker returned no valid upstream version."
+    fi
+
+    db_version=${db_versions[$pkgname]-}
+    comparison=$(compare_versions "$upstream_ver" "$pkgver")
+    if [[ "$comparison" == 1 ]]; then
+        candidate_version="${epoch:+$epoch:}$upstream_ver-1"
+        if [[ -n "$db_version" ]]; then
+            comparison=$(compare_versions "$candidate_version" "$db_version")
+            if [[ "$comparison" == -1 ]]; then
+                echo "[$pkgname] Published version $db_version is newer than candidate $candidate_version."
+                continue
+            fi
+        fi
+
+        echo "[$pkgname] Upstream update: $pkgver -> $upstream_ver"
+        staged_recipe=$work_dir/staged/$pkgbuild_path
+        mkdir -p -- "${staged_recipe%/*}"
+        cp -p -- "$pkgbuild_path" "$staged_recipe"
+        sed -i -e "s/^pkgver=.*/pkgver=$upstream_ver/" -e 's/^pkgrel=.*/pkgrel=1/' "$staged_recipe"
+        if [[ -f "$pkg_dir/update.sh" ]]; then
+            bash "$pkg_dir/update.sh" "$staged_recipe" ||
+                fail "[$pkgname] Could not update the package recipe."
+        fi
+        changed_recipes+=("$pkgbuild_path")
+        build_list+=("$pkg_dir")
+        continue
+    fi
+
+    local_version="${epoch:+$epoch:}$pkgver-$pkgrel"
+    if [[ -z "$db_version" ]]; then
+        echo "[$pkgname] Missing from the repository database. Queued for build."
+        build_list+=("$pkg_dir")
+        continue
+    fi
+
+    comparison=$(compare_versions "$local_version" "$db_version")
+    if [[ "$comparison" == 1 ]]; then
+        echo "[$pkgname] Local version $local_version is newer than published version $db_version. Queued for build."
+        build_list+=("$pkg_dir")
+    else
+        echo "[$pkgname] Published version $db_version is current."
     fi
 done
 
-# Cleanup
-rm -f nvchecker.log db_versions.txt
-rm -rf db_tmp
+# Apply recipe edits only after checking all versions and running package hooks.
+for pkgbuild_path in "${changed_recipes[@]}"; do
+    mv -- "$work_dir/staged/$pkgbuild_path" "$pkgbuild_path"
+done
 
-# Output results for GitHub Actions
-if [ ${#BUILD_LIST[@]} -eq 0 ]; then
+if ((${#build_list[@]} == 0)); then
     echo "No updates or builds required."
     echo "BUILD_REQUIRED=false" >> "$GITHUB_OUTPUT"
 else
-    # Deduplicate list and format as JSON
-    JSON_LIST=$(printf '%s\n' "${BUILD_LIST[@]}" | sort -u | jq -R . | jq -s -c .)
-    echo "Build List: $JSON_LIST"
-    
-    echo "BUILD_REQUIRED=true" >> "$GITHUB_OUTPUT"
-    echo "BUILD_PACKAGES=$JSON_LIST" >> "$GITHUB_OUTPUT"
+    json_list=$(printf '%s\n' "${build_list[@]}" | jq -R . | jq -sc .)
+    printf 'Build list: %s\n' "$json_list"
+    printf 'BUILD_REQUIRED=true\nBUILD_PACKAGES=%s\n' "$json_list" >> "$GITHUB_OUTPUT"
 fi
